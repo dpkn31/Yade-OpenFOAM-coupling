@@ -18,5 +18,5 @@ Prerequisites : Yade version 2019-01-04.git-f5aa5f7. OpenFOAM-6.
 * Create a symbolic link
   * ln -s /path/to/your/yade/install/bin/yade-exec libyade.py
 * Run 
-  * mpiexec -n 1 python scriptYade.py : -n 4 icoFoamYade 
+  * mpiexec -n 1 python scriptYade.py : -n 4 icoFoamYade -parallel
   
