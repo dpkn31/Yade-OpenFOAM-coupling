@@ -1,3 +1,4 @@
+//Deepak Kunhappan : deepak.kunhappan@3sr-grenoble.fr
 #include "yadeComm.H" 
 
 Foam::yadeComm::yadeComm()
