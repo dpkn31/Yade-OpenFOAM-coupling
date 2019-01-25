@@ -1,3 +1,5 @@
+//Deepak Kunhappan : deepak.kunhappan@3sr-grenoble.fr
+
 #ifndef yadeComm_H 
 #define yadeComm_H 
 
