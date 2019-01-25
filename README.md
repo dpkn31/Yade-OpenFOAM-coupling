@@ -1,4 +1,5 @@
 # Yade-OpenFOAM-coupling
+![Alt text](ccpl1.png)
 A coupling module for coupling  the DEM solver YADE with the FVM solver OpenFOAM 
 
 Prerequisites : Yade version 2019-01-04.git-f5aa5f7. OpenFOAM-6. 
