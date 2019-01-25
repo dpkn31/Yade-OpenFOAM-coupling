@@ -1,0 +1,3 @@
+icoFoamYade.C
+
+EXE = $(FOAM_APPBIN)/icoFoamYade
