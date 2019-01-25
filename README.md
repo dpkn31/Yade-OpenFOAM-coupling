@@ -13,3 +13,10 @@ Prerequisites : Yade version 2019-01-04.git-f5aa5f7. OpenFOAM-6.
 
 * Copy _utils.cpp and _utils.hpp to your YADE trunk/py/ directory and then compile. 
 
+## Running 
+* Copy example to $FOAM_RUN
+* Create a symbolic link
+  * ln -s /path/to/your/yade/install/bin/yade-exec 
+* Run 
+  * mpiexec -n 1 python scriptYade.py : -n 4 icoFoamYade 
+  
