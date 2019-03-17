@@ -1,0 +1,11 @@
+cd FoamYade/commYade/
+wclean
+cd ../ 
+cd meshtree/
+wclean
+cd ../ 
+wclean
+cd ../
+cd icoFoamYade/
+wclean
+cd ../
