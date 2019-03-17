@@ -1,2 +1,0 @@
-foamYade.C 
-LIB=$(FOAM_USER_LIBBIN)/libYadeFoam
