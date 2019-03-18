@@ -1,7 +1,11 @@
 # Yade-OpenFOAM-coupling
-An OpenFOAM solver for realizing CFD-DEM simulations with the Open Source Discrete Element Solver Yade-DEM. Two simulation methods 
-are available at present : simple point force coupling and full 4-way coupled CFD-DEM simulation. 
-Particle Resolved (based on Immersed Boundary Method) solver coming soon. 
+An OpenFOAM solver for realizing CFD-DEM simulations with the Open Source Discrete Element Solver Yade-DEM. 
+* Features
+ * Fast mesh search based on k-d Tree algorithm, faster than the original Octree search offered by OpenFOAM (mesh.findCell,  mesh.findNearest).
+ * Gaussian interpolation of field variables. 
+ * Simple point-force coupling (icoFoamYade) solver
+ * Full 4-way coupling pimpleFoamYade) solver. (under validation) 
+
 
 ![Alt text](ccpl1.png)
 
