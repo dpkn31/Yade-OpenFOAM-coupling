@@ -4,8 +4,10 @@ The simulation starts from time 0.0. At this time the velocity field in the flui
 2. Set the number of OpenFOAM processes in the decomposeParDict dictionary. 
 3. Run decomposeParDict. 
 4. First run the fluid solver icoFoamYade with the coupling disabled, (this can be done in the icoFoamYade.C file, commenting all lines (lines 55, 56, 66 and 128 ) starting with `yadecoupling' and compiling icoFoamYade.C using wmake). 
-5. Modify icoFoamYade.C file, uncomment the lines starting with `yadecoupling'. wmake. 
-5. edit system/controlDict and set the start time to the time value yuou had last saved (restart the simulation with a developed velocity profile).
-5. Run the simulation : 
+5. Set the start and end times in the system/controlDict file, run : 
+    mpiexec -n numprocs icoFoamYade -parallel
+6. Modify icoFoamYade.C file, uncomment the lines starting with `yadecoupling'. wmake. 
+7. edit system/controlDict and set the start time to the time value yuou had last saved (restart the simulation with a developed velocity profile).
+8. Run the simulation : 
     mpiexec -n 1 python scriptYade.py : -n numprocs icoFoamYade -parallel
   where numprocs is the number of processors set in the decomposeParDict. 
