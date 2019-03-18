@@ -1,6 +1,7 @@
 #Deepak Kunhappan, deepak.kunhappan@3sr-grenoble.fr 
 #Example script of Yade-OpenFOAM couplinfg.
 #get the OpenFOAM solver at : https://github.com/dpkn31/Yade-OpenFOAM-coupling
+#get the latest version of Yade with the FoamCoupling engine here : https://gitlab.com/yade-dev/trunk
 
 
 import sys 
