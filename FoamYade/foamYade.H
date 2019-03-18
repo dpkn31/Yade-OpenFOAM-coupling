@@ -112,7 +112,9 @@ namespace Foam
         void resetLocalParticle(); 
         void combineForceToMaster(); 
         void exchangeTimeStep();  
-        void sendHydroForceYade(); 
+        void sendHydroForceYade();
+        void stokesDragForce(yadeParticle* ); 
+        void stokesDragTorque(yadeParticle* );  
         void haveIndex(const int&, std::vector<double>& );
         void setParticleAction(double );  
         ~foamYade(){}; 
