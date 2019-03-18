@@ -43,7 +43,7 @@ class simulation():
     
     fluidCoupling.setNumParticles(numparts)
     fluidCoupling.setIdList(sphereIDs)
-    fluidCoupling.isGaussian=True;  
+    fluidCoupling.isGaussian=False;  #use pimpleFoamYade for gaussianInterp
 
     newton=NewtonIntegrator(damping=0.0, gravity = (0.0 ,0.0, 0.0)) # add small damping in case of stability issues.. ~ 0.1 max, also note : If using gravity,  make sure buoyancy force is switched on in the foam side, else the simulation will crash
 
