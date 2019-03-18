@@ -1,4 +1,3 @@
-Delete the folders `processor0' and `processor1' 
 The simulation starts from time 0.0. At this time the velocity field in the fluid domain is not developed. 
 1. Setup the grid in system/blockMeshDict. Run blockMeshDict.
 2. Set the number of OpenFOAM processes in the decomposeParDict dictionary. 
