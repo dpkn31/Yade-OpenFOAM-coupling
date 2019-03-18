@@ -19,7 +19,7 @@ void Foam::foamYade::allocArrays(){
   mshTree.build_tree();  
   interp_range = std::pow(mesh.V()[0], 1.0/3.0)*3; // assuming uniform mesh, change later.
   sigma_interp = interp_range/2.3548200; // 2*deltaX/(2sqrt(2ln(2))) filter width half maximum; 
-  sigma_pi = 1/(std::pow(2*M_PI*sigma_interp*sigma_interp, 1.5)); 
+  sigma_pi = 1/(std::pow(2*M_PI*sigma_interp*sigma_interp*sigma_interp, 1.5)); 
   
 }
 
