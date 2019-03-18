@@ -19,7 +19,7 @@ application     icoFoamYade;
 
 startFrom       startTime;
 
-startTime       219.6;
+startTime       0;
 
 stopAt          endTime;
 
