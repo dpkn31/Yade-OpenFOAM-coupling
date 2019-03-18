@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl; 
   
-    bool gaussianInterp = true; 
+    bool gaussianInterp = false; 
     foamYade yadecoupling(mesh,U,uSource,uParticle ,alpha, gradP, vGrad, divT,g,gaussianInterp); 
     yadecoupling.setScalarProperties(nu.value(), partDensity.value(), fluidDensity.value() ); 
 
