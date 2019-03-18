@@ -1,11 +1,14 @@
 # Yade-OpenFOAM-coupling
-![Alt text](ccpl1.png)
-A coupling module for coupling  the DEM solver YADE with the FVM solver OpenFOAM. 
+An OpenFOAM solver for realizing CFD-DEM simulations with the Open Source Discrete Element Solver Yade-DEM. Two simulation methods 
+are available at present : simple point force coupling and full 4-way coupled CFD-DEM simulation. 
+Particle Resolved (based on Immersed Boundary Method) solver coming soon. 
 
-Prerequisites : Yade version 2019-01-04.git-f5aa5f7. OpenFOAM-6. 
+![Alt text](ccpl1.png)
+
+Prerequisites : Lates Yade git version with the FoamCoupling engine (https://gitlab.com/yade-dev/trunk). OpenFOAM-6. 
 
 ## Build
-* Compile everything : 
+* Compile the lib FoamYade and solver icoFoamYade : 
   * ``./Allwmake``
 
 ## Running 
@@ -13,5 +16,6 @@ Prerequisites : Yade version 2019-01-04.git-f5aa5f7. OpenFOAM-6.
 * Create a symbolic link
   * ``ln -s /path/to/your/yade/install/bin/yade-exec libyade.py``
 * Run 
-  * ``mpiexec -n 1 python scriptYade.py : -n 4 icoFoamYade -parallel``
+  * ``cp -r example_icoFoamYade /to/your/run/dir ``
+  * ``mpiexec -n 1 python scriptYade.py : -n 2 icoFoamYade -parallel``
   
