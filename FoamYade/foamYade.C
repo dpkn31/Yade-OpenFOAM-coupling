@@ -143,7 +143,7 @@ bool Foam::foamYade::locateParticle(yadeParticle* aParticle)
     if (aParticle->cellIds.size()){value = true; } 
    } else {  
      label cellid = mesh.findCell(aParticle -> pos); 
-     if (cellid > 0 ) { aParticle->inCell= cellid; value = true;  }
+     if (cellid > -1 ) { aParticle->inCell= cellid; value = true;  }
    }
     return value; 
 }
@@ -153,7 +153,6 @@ bool Foam::foamYade::locateParticle(yadeParticle* aParticle)
 void Foam::foamYade::sendHydroForcePoint() 
 {
  
-  std::cout << "sending " << std::endl; 
   for (int i=0; i != numParticles; ++i)
   {
     if (comm.rank==particleInProc[i])
@@ -244,7 +243,7 @@ void Foam::foamYade::stokesDragTorque(yadeParticle* particle)
 
 {
 
-  autoPtr<interpolation<tensor>> interpGradU = interpolation<tensor>::New("cell",vGrad); //cellPoint doesn't work
+  autoPtr<interpolation<tensor>> interpGradU = interpolation<tensor>::New("cell",vGrad); //
   const tensor& uGradpt = interpGradU->interpolate(particle->pos, particle->inCell);
   scalar s1 = uGradpt.zy() - uGradpt.yz(); scalar s2 = uGradpt.zx()-uGradpt.xz(); scalar s3 = uGradpt.yx()-uGradpt.xy(); 
   vector wFluid(s1,s2,s3);  
