@@ -8,7 +8,7 @@ An OpenFOAM solver for realizing CFD-DEM simulations with the Open Source Discre
 
 ![Alt text](ccpl1.png)
 
-Prerequisites : Lates Yade git version with the FoamCoupling engine (https://gitlab.com/yade-dev/trunk). OpenFOAM-6. 
+Prerequisites : Latest Yade git version with the FoamCoupling engine (https://gitlab.com/yade-dev/trunk). OpenFOAM-6. 
 
 ## Build
 * Compile the lib FoamYade and solver icoFoamYade : 
