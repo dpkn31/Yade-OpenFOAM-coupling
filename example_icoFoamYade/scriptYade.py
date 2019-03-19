@@ -8,8 +8,9 @@ import sys
 from libyade import *
 from yade.utils import *
 
+initMPI() #Initialize the mpi environment, always required. 
 fluidCoupling = FoamCoupling();
-fluidCoupling.initMPI(); #Initialize the mpi environment, always required. 
+fluidCoupling.getRank();
 
 
 #example of spheres in shear flow : two-way point force coupling
