@@ -36,7 +36,7 @@ class simulation():
     mn, mx= Vector3(2e-08,2e-08,2e-08), Vector3(1-2e-08,1-2e-08, 1-2e-08)
  
     sp = pack.SpherePack();
-    sp.makeCloud(mn,mx,-1,0.3333,numspheres,False, 0.95,seed=1) 
+    sp.makeCloud(mn,mx,rMean=0.0075,rRelFuzz=0.10, num=numspheres)
     O.bodies.append([sphere(center,rad,material='spheremat') for center,rad in sp]) 
 
     sphereIDs = [b.id for b in O.bodies if type(b.shape)==Sphere] 
