@@ -50,10 +50,16 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl; 
   
-    bool gaussianInterp = false; 
+    bool gaussianInterp = false;   
     foamYade yadecoupling(mesh,U,uSource,uParticle ,alpha, gradP, vGrad, divT,g,gaussianInterp); 
-    yadecoupling.setScalarProperties(nu.value(), partDensity.value(), fluidDensity.value() ); 
+    yadecoupling.setScalarProperties(nu.value(), partDensity.value(), fluidDensity.value() );
 
+
+//     shear flow velocity initialization    
+//    forAll(U, cellI) {
+//       U[cellI].x() = (4.0*mesh.C()[cellI].y())-2.0; 
+//    } 
+//
 
 
     while (runTime.loop())
