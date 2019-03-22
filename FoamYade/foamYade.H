@@ -49,7 +49,9 @@ namespace Foam
        std::vector<double> hydroForce; 
        std::vector<double> particleData; 
        std::vector<int>  particleInProc;
-       std::vector<yadeParticle*> localParticle;  
+       std::vector<yadeParticle*> localParticle; 
+       std::vector<int> numinCell; 
+       std::vector<double> pVolContrib;  
        bool haveParticle;
        void allocArrays(); 
        const int yadeProc = 0;
@@ -64,7 +66,7 @@ namespace Foam
        const uniformDimensionedVectorField& gravity; 
        yadeComm comm;
        bool recvdParticleData; 
-       bool isGaussianIntep;  
+       bool isGaussianInterp;  
        meshTree mshTree;
        scalar partDensity; 
        scalar nu;
@@ -92,7 +94,7 @@ namespace Foam
                       uParticle(upart), alpha(volfrac), gradp(pgrad),
                       vGrad(gradv), divT(divergencestress), 
                       gravity(gravityf), mshTree(mesh.C()) 
-                     {allocArrays(); isGaussianIntep=gaussianinterp;  }; 
+                     {allocArrays(); isGaussianInterp=gaussianinterp;  }; 
         void setScalarProperties(scalar, scalar, scalar); 
         void locateAllParticle(); 
         bool locateParticle(yadeParticle* ); 

@@ -16,8 +16,10 @@ void Foam::foamYade::allocArrays(){
   hydroForce.assign(numParticles*6,1e-19); 
   haveParticle= false;
   recvdParticleData = false; 
+  numinCell.assign(mesh.V().size(), 0); 
+  pVolContrib.assign(mesh.V().size(),0.0); 
   mshTree.build_tree();  
-  interp_range = std::pow(mesh.V()[0], 1.0/3.0)*3; // assuming uniform mesh, change later.
+  interp_range = std::pow(mesh.V()[0], 0.3333)*3; // assuming uniform mesh, change later.
   sigma_interp = interp_range/2.3548200; // 2*deltaX/(2sqrt(2ln(2))) filter width half maximum; 
   sigma_pi = 1/(std::pow(2*M_PI*sigma_interp*sigma_interp, 1.5)); 
   
@@ -35,7 +37,6 @@ void Foam::foamYade::calcInterpWeightGaussian(yadeParticle* particle) { // gauss
     const double& ds3 = mesh.C()[particle -> cellIds[i]].z() - particle -> pos.z(); 
     distsq = (ds1*ds1)+(ds2*ds2)+(ds3*ds3); 
     double weight = exp(-distsq/(2*std::pow(sigma_interp, 2)))*sigma_pi*mesh.V()[particle->cellIds[i]]; 
-//      std::cout << "weight value = "  << weight << std::endl; 
 
     particle -> interpCellWeight.push_back(std::make_pair(particle-> cellIds[i],weight)); 
     
@@ -65,7 +66,6 @@ void Foam::foamYade::calcInterpWeightDiracDelta(yadeParticle* particle) { // gau
 
 
 void Foam::foamYade::setScalarProperties(scalar nu_val, scalar pDensity, scalar fDensity) {
-
   nu = nu_val; 
   partDensity = pDensity; 
   fluidDensity = fDensity; 
@@ -78,10 +78,8 @@ void Foam::foamYade::resetLocalParticle()
 {
 
   const std::size_t& vec_sz = localParticle.size(); 
-  if (vec_sz > 0)
-  {
-    while (!localParticle.empty()) delete localParticle.back(), localParticle.pop_back(); 
-  }
+  if (vec_sz > 0){
+    while (!localParticle.empty()) delete localParticle.back(), localParticle.pop_back(); }
   localParticle.clear(); 
 
 }
@@ -94,21 +92,17 @@ void Foam::foamYade::locateAllParticle()
        comm.cast_double_array_data(yadeProc, particleData);      
        for (int i=0; i != numParticles; ++i)
        {
-    //     std::cout << "indexFoam  = " << i << std::endl; 
-         //vector pt(particle->ata[i*9], particleData[i*9+1], particleData[i*9+2]); 
+
          yadeParticle*  particle = new yadeParticle();
-         //std::unique_ptr<yadeparticle-> particle (new yadeParticle);  
+         //std::unique_ptr<yadeparticle-> particle (new yadeParticle); 
          particle->pos.x() = particleData[i*10];
          particle->pos.y()= particleData[i*10+1]; 
          particle->pos.z() = particleData[i*10+2]; 
          particle->inProc = -1; 
 
-//          Info << "pos = " <<  particle->pos << endl;  
+        if (locateParticle(particle)){           
 
-        //std::cout << "index = " << i << std::endl;
-        if (locateParticle(particle)){
-           
-           particle-> inProc = comm.rank;
+          particle-> inProc = comm.rank;
            particle->indx = i; 
            localParticle.push_back(particle);
            particle->linearVelocity.x()=particleData[i*10+3]; 
@@ -124,7 +118,6 @@ void Foam::foamYade::locateAllParticle()
  
         }
         comm.procReduceMaxInt(particle-> inProc, particleInProc[i]);  
-        //std::cout << "in proc = " << particleInProc[i]<<std::endl; 
         if (comm.rank==1 && particleInProc[i] < 0)
            std::cout << "particle->id = " << i  << " " << " pos " << particle -> pos.x() << " " << particle -> pos.y() << " "<< particle -> pos.z() << " "<< "not found " << std::endl;
         if (particle -> inProc != comm.rank)
@@ -138,8 +131,8 @@ bool Foam::foamYade::locateParticle(yadeParticle* aParticle)
 {
 
     bool value = false;
-   if (isGaussianIntep ){ 
-    aParticle ->cellIds = mshTree.nnearestCellsRange(aParticle->pos, interp_range, isGaussianIntep);
+   if (isGaussianInterp ){ 
+    aParticle ->cellIds = mshTree.nnearestCellsRange(aParticle->pos, interp_range, isGaussianInterp);
     if (aParticle->cellIds.size()){value = true; } 
    } else {  
      label cellid = mesh.findCell(aParticle -> pos); 
@@ -179,20 +172,17 @@ void Foam::foamYade::sendHydroForcePoint()
 
 
 void Foam::foamYade::initParticleForce(yadeParticle* particle) {
-  
+
   vector nullV(0.0,0.0,0.0); 
   particle->hydroForce = nullV; 
   particle->hydroTorque = nullV; 
-  calcInterpWeightGaussian(particle); 
-
 }
 
 
 
 void Foam::foamYade::calcHydroForce(yadeParticle* particle){
 
-
-if(isGaussianIntep){
+if(isGaussianInterp){
 
   initParticleForce(particle);
 //   archimedesForce(particle); 
@@ -210,8 +200,6 @@ if(isGaussianIntep){
 
 
 void Foam::foamYade::buoyancyForce(yadeParticle* particle) { 
-
-
  
   const scalar& pvol = M_PI*std::pow(particle -> dia, 3)*(1.0/6.0); 
   for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i) { 
@@ -230,18 +218,14 @@ void Foam::foamYade::buoyancyForce(yadeParticle* particle) {
 }
 
 
-
-void Foam::foamYade::stokesDragForce(yadeParticle* particle) 
-{
+void Foam::foamYade::stokesDragForce(yadeParticle* particle) {
   autoPtr<interpolation<vector>> interpVel = interpolation<vector>::New("cell",U);  // cellPoint does not work in parallel, why? 
   const vector& uFluid = interpVel->interpolate(particle->pos,particle->inCell);
   particle->hydroForce = 3*M_PI*(particle->dia)*(uFluid-particle->linearVelocity)*nu; 
   uSource[particle->inCell] = -particle->hydroForce*(1/(mesh.V()[particle->inCell]));
 }
 
-void Foam::foamYade::stokesDragTorque(yadeParticle* particle) 
-
-{
+void Foam::foamYade::stokesDragTorque(yadeParticle* particle)  {
 
   autoPtr<interpolation<tensor>> interpGradU = interpolation<tensor>::New("cell",vGrad); //
   const tensor& uGradpt = interpGradU->interpolate(particle->pos, particle->inCell);
@@ -256,38 +240,40 @@ void Foam::foamYade::stokesDragTorque(yadeParticle* particle)
 void Foam::foamYade::setCellVolFraction(yadeParticle* particle) //interpCellWeight vector<pair<id,weight>>
 {
 
-  
-  scalar pvol = M_PI*pow(particle->dia,3)/6.0;
-  for (unsigned int i=0; i != particle ->interpCellWeight.size(); ++i)
-  {
-    scalar pf = (pvol * particle->interpCellWeight[i].second)/mesh.V()[particle-> interpCellWeight[i].first]; 
-    alpha[particle->interpCellWeight[i].first] += 1-pf; 
+ if (isGaussianInterp){ 
+
+    calcInterpWeightGaussian(particle);  
+    scalar pvol = M_PI*pow(particle->dia,3)/6.0;
+    for (unsigned int i=0; i != particle ->interpCellWeight.size(); ++i){
+    const int& cellid = particle->interpCellWeight[i].first; 
+    const double& weight = particle-> interpCellWeight[i].second; 
+    const scalar& pf = (pvol* weight); 
+    pVolContrib[cellid] += pf; 
+    numinCell[cellid] +=1; 
+    alpha[cellid] = 1-(pVolContrib[cellid]*numinCell[cellid])/mesh.V()[cellid]; 
   }
+ 
+ } else { return ;}
 
 }
 
 
 void Foam::foamYade::archimedesForce(yadeParticle* particle)
 {
-
-    // \vec F_a = (divT+divP)*pvol; 
-
+    // \vec F_a = (divT-divP)*pvol; 
     const scalar& pvol =   2*nu*M_PI*pow(particle->dia,3)/6.0;
     for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i) {
-
 
     const int& cellid = particle -> interpCellWeight[i].first; 
     const double& weight = particle -> interpCellWeight[i].second; 
     const double& cellvol =  mesh.V()[cellid]; 
 
-      
-     const vector& divt  = 2.0*nu*divT[cellid]*weight;
-     const vector& pg   =  -gradp[cellid]*weight; 
-     vector f = pvol*(divt+pg); 
-     uSource[cellid]+= -1*f/cellvol;   
-     particle -> hydroForce += f; // fluid density 
+    const vector& divt  = 2.0*nu*divT[cellid]*weight;
+    const vector& pg   =  -gradp[cellid]*weight; 
+    vector f = pvol*(divt+pg); 
+    uSource[cellid]+= -1*f/cellvol;   
+    particle -> hydroForce += f; // fluid density 
   }
-
 
 }
 
@@ -296,10 +282,7 @@ void Foam::foamYade::archimedesForce(yadeParticle* particle)
 void Foam::foamYade::calcHydroTorque(yadeParticle* particle)
 {
 
-
-  if (isGaussianIntep){
-
-
+  if (isGaussianInterp){
 
   for (unsigned int i=0; i!= particle -> interpCellWeight.size(); ++i) 
   {
@@ -315,9 +298,7 @@ void Foam::foamYade::calcHydroTorque(yadeParticle* particle)
   
   }
 
- } else {
-  stokesDragTorque(particle); 
- }
+ } else {stokesDragTorque(particle);  }
 
 }
 
@@ -349,8 +330,6 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
     upart = upart + (weight*particle->linearVelocity); 
     particle -> hydroForce += f; 
 
-
-
   }
 
 }
@@ -370,30 +349,19 @@ void Foam::foamYade::combineForceToMaster(){
 }
 
 
-void Foam::foamYade::setSourceZero()
-{
+void Foam::foamYade::setSourceZero() {
   
   forAll(uSource, cellI){
     uSource[cellI].x()=0.0; 
     uSource[cellI].y()=0.0; 
     uSource[cellI].z()=0.0; 
-    alpha[cellI] = 0.0; 
+    alpha[cellI] = 1.0; 
     uParticle[cellI].x() = 0.0;
     uParticle[cellI].y() = 0.0; 
     uParticle[cellI].z() = 0.0; 
-
+    std::fill(numinCell.begin(), numinCell.end(), 0); 
+    std::fill(pVolContrib.begin(), pVolContrib.end(), 0.0); 
   } 
-
-//  forAll(alpha, cellI){
-//    alpha[cellI] = 0.0; 
-//  }
-//
-//  forAll(uParticle, cellI){
-//    uParticle[cellI].x() = 0.0;
-//    uParticle[cellI].y() = 0.0; 
-//    uParticle[cellI].z() = 0.0; 
-//  }
-//
 } 
 
 void Foam::foamYade::exchangeTimeStep() { 
@@ -424,7 +392,7 @@ void Foam::foamYade::haveIndex(const int& pIndex, std::vector<double>& values) {
 
 void Foam::foamYade::sendHydroForceYade() {
 
-  if(isGaussianIntep){
+  if(isGaussianInterp){
     combineForceToMaster(); 
   }else {
     sendHydroForcePoint(); 
