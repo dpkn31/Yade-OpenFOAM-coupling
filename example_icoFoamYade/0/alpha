@@ -14,23 +14,23 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 0 0 0 0 0 0] 0;
+dimensions      [0 0 0 0 0 0 0] 1;
 
-internalField   uniform 0;
+internalField   uniform 1;
 
 boundaryField
 {
     y1
     {
         type            calculated;
-        value           uniform 0; 
+        value           uniform 1; 
     }
 
 
     y0
     {
         type            calculated;
-        value           uniform 0; 
+        value           uniform 1; 
     }
 
 
