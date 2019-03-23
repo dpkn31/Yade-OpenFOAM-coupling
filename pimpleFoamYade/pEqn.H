@@ -1,4 +1,5 @@
 {
+
     volVectorField HbyA(constrainHbyA(rAUc*UcEqn.H(), Uc, p));
 
     surfaceScalarField phiHbyA
@@ -9,6 +10,7 @@
          + alphacf*rAUcf*fvc::ddtCorr(Uc, phic)
         )
     );
+
 
     if (p.needReference())
     {
@@ -36,12 +38,12 @@
 
         if (pimple.finalNonOrthogonalIter())
         {
-            phic = phiHbyA - pEqn.flux()/alphacf;
+            phic = phiHbyA - pEqn.flux()/(alphacf+1e-20);
 
             p.relax();
 
             Uc = HbyA
-              + rAUc*fvc::reconstruct((phicForces - pEqn.flux()/alphacf)/rAUcf);
+              + rAUc*fvc::reconstruct((phicForces - pEqn.flux()/(alphacf+1e-20))/rAUcf);
             Uc.correctBoundaryConditions();
         }
     }

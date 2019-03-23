@@ -6,12 +6,13 @@
   - fvm::Sp(fvc::ddt(alphac) + fvc::div(alphaPhic), Uc)
   + continuousPhaseTurbulence->divDevRhoReff(Uc)
  ==
-    fvm::Sp(uSourceDrag, uRelVel) 
+    fvc::Sp(uSourceDrag,uRelVel) 
 );
 
 UcEqn.relax();
-
+ 
 volScalarField rAUc(1.0/UcEqn.A());
+
 surfaceScalarField rAUcf("Dp", fvc::interpolate(rAUc));
 
 surfaceScalarField phicForces

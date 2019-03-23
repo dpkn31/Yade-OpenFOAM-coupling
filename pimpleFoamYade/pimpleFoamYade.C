@@ -52,6 +52,16 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl;
 
+    
+    bool gaussianInterp = true; 
+    foamYade yadeCoupling(mesh,Uc, uSource, uRelVel, alphac, gradP,vGrad,divT,uSourceDrag,gaussianInterp); 
+    yadeCoupling.setScalarProperties(nuValue.value(), partDensity.value(), 1000); 
+
+
+   forAll(Uc, cellI) { 
+     Uc[cellI].x() = (4.0*mesh.C()[cellI].y())-2.0; 
+   } 
+    
     while (runTime.run())
     {
         #include "readTimeControls.H"
@@ -66,15 +76,14 @@ int main(int argc, char *argv[])
         muc = rhoc*continuousPhaseTransport.nu();
 
 
-        // Update continuous phase volume fraction field
-//        alphac = max(1.0 - kinematicCloud.theta(), alphacMin);
-        alphac.correctBoundaryConditions();
+        scalar dt = runTime.deltaT().value(); 
+        yadeCoupling.setParticleAction(dt); 
+
+
         alphacf = fvc::interpolate(alphac);
         alphaPhic = alphacf*phic; 
 
 
-        bool gaussianInterp = true; 
-        foamYade yadeCoupling(mesh,Uc, uSource, uRelVel, alphac, gradP,vGrad,divT,g,uSourceDrag,gaussianInterp); 
 
         // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
@@ -94,6 +103,7 @@ int main(int argc, char *argv[])
         }
 
         runTime.write();
+        yadeCoupling.setSourceZero(); 
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"
