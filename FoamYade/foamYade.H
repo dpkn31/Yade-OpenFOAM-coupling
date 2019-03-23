@@ -58,12 +58,12 @@ namespace Foam
        const fvMesh& mesh; 
        const volVectorField& U; 
        volVectorField& uSource;
-       volVectorField& uParticle;  
-       volScalarField& alpha; 
+       volVectorField& uRelVel;  
+       volScalarField& alpha;
        const volVectorField& gradp;// fvc::grad(p) 
        const volTensorField& vGrad;// fvc::grad(U) 
-       const volVectorField& divT; // fvc::laplacian((U)) 
-       const uniformDimensionedVectorField& gravity; 
+       const volVectorField& divT; // fvc::laplacian((U))
+       volScalarField& uSourceDrag;  
        yadeComm comm;
        bool recvdParticleData; 
        bool isGaussianInterp;  
@@ -83,18 +83,18 @@ namespace Foam
        foamYade(const fvMesh& meshm, 
                 const volVectorField& u, 
                       volVectorField& usource, 
-                      volVectorField& upart, 
+                      volVectorField& urelvel, 
                       volScalarField& volfrac,
                 const volVectorField& pgrad, 
                 const volTensorField& gradv,
                 const volVectorField& divergencestress,  
-                       uniformDimensionedVectorField&  gravityf, 
+                      volScalarField& dragcoeff,  
                        bool gaussianinterp) :
                       mesh(meshm), U(u), uSource(usource), 
-                      uParticle(upart), alpha(volfrac), gradp(pgrad),
+                      uRelVel(urelvel), alpha(volfrac), gradp(pgrad),
                       vGrad(gradv), divT(divergencestress), 
-                      gravity(gravityf), mshTree(mesh.C()) 
-                     {allocArrays(); isGaussianInterp=gaussianinterp;  }; 
+                      uSourceDrag(dragcoeff), mshTree(mesh.C()) 
+                      {allocArrays(); isGaussianInterp=gaussianinterp;  }; 
         void setScalarProperties(scalar, scalar, scalar); 
         void locateAllParticle(); 
         bool locateParticle(yadeParticle* ); 
