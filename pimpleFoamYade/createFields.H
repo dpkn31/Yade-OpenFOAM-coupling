@@ -181,7 +181,7 @@ volVectorField gradP(
       mesh, 
       IOobject::NO_READ, 
       IOobject::AUTO_WRITE), 
-      fvc::grad(p)*scalar(-1.0)
+      fvc::grad(p) 
 ); 
 
 
@@ -208,7 +208,7 @@ volVectorField uSource(
     mesh, 
     dimensionedVector("volSource", dimensionSet(0,1,-2,0,0,0,0), vector(0,0,0) ) 
 ); 
- 
+
 
 
 volVectorField uRelVel(
@@ -221,6 +221,18 @@ volVectorField uRelVel(
     mesh, 
     dimensionedVector("relative_velocity", dimensionSet(0,1,-1,0,0,0,0), vector(0,0,0) ) 
 ); 
+
+
+volVectorField ddtU_f ( 
+    IOobject (
+      "ddtU_f", 
+      runTime.timeName(), 
+      mesh, 
+      IOobject::NO_READ,
+      IOobject::NO_WRITE), 
+      fvc::ddt(Uc)+fvc::div(phic, Uc)
+); 
+
 
 
 surfaceScalarField alphacf("alphacf", fvc::interpolate(alphac));

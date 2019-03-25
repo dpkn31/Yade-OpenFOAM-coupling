@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
     
     bool gaussianInterp = true; 
-    foamYade yadeCoupling(mesh,Uc, uSource, uRelVel, alphac, gradP,vGrad,divT,uSourceDrag,gaussianInterp); 
+    foamYade yadeCoupling(mesh,Uc, uSource, uRelVel, alphac, gradP,vGrad,divT,uSourceDrag,ddtU_f,gaussianInterp); 
     yadeCoupling.setScalarProperties(nuValue.value(), partDensity.value(), 1000); 
 
 
@@ -74,6 +74,13 @@ int main(int argc, char *argv[])
 
         continuousPhaseTransport.correct();
         muc = rhoc*continuousPhaseTransport.nu();
+
+        // upadte gradp, divT, and 
+        
+        ddtU_f = fvc::ddt(Uc)+fvc::div(phic, Uc); 
+        gradP = fvc::grad(p); 
+        divT = 2*nuValue.value()*fvc::laplacian(alphac, Uc); 
+        vGrad = fvc::grad(Uc); 
 
 
         scalar dt = runTime.deltaT().value(); 
