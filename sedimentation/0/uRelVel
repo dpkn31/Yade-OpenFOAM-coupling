@@ -1,0 +1,72 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    object      uRelVel;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    y0
+    {
+        type            cyclic;
+
+    }
+
+
+    y1
+    {
+        type            cyclic;
+
+    }
+
+
+    x0 
+    {
+        type            cyclic;
+    
+    }
+
+
+
+
+    x1 
+    {
+        type            cyclic;
+    
+    }
+
+
+    z1 
+    {
+        type            cyclic;
+    
+    }
+
+
+
+    z0 
+    {
+        type            cyclic;
+    
+    }
+
+
+
+
+}
+
+// ************************************************************************* //
