@@ -332,7 +332,7 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
   // tp = rho_p(d**2)/18mu;                     
   //const scalar& mu_ = nu*fluidDensity;
   //const scalar& relaxTime = partDensity*std::pow(particle->dia, 2)/(18*mu_);
-
+  double small = 1e-08; 
   const scalar& pvol = (M_PI*std::pow(particle->dia,3))/6.0; 
   for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i) {
   
@@ -344,14 +344,23 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
     const vector& rv = ufluid-particle->linearVelocity; 
     const double& magrv  = mag(rv); 
     uRelVel[cellid] += rv;  
-    const scalar& Re = (particle->dia*magrv)/nu;
-
+    const scalar& Re =((particle->dia*magrv)/nu)+ small;
     const scalar& Cd = (24.0/Re)*(1+(0.15*std::pow(Re, 0.687)));  //  
 
+    if (Re < 1e-03){
+      const scalar& coeff = (3*M_PI*particle->dia);
+    const scalar& alpha_p = 1-alpha_f; 
+    uSourceDrag[cellid] += (-1.0*alpha_p*alpha_f*coeff); 
+    particle->hydroForce += (coeff*rv); 
+
+    } else {
+
+//    Info << "cd  = " << Cd << endl; 
     const scalar& coeff = (0.75*Cd*magrv*std::pow(alpha_f, -2.65))*(1/particle->dia);
     const scalar& alpha_p = 1-alpha_f; 
     uSourceDrag[cellid] += (-1.0*alpha_p*alpha_f*coeff); 
     particle->hydroForce += (pvol*partDensity*coeff*rv); 
+    }
 
   }
 
