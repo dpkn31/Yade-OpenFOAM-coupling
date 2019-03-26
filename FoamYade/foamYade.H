@@ -58,7 +58,7 @@ namespace Foam
        const fvMesh& mesh; 
        const volVectorField& U; 
        volVectorField& uSource;
-       volVectorField& uRelVel;  
+       volVectorField& uParticle;  
        volScalarField& alpha;
        const volVectorField& gradp;// fvc::grad(p) 
        const volTensorField& vGrad;// fvc::grad(U) 
@@ -84,7 +84,7 @@ namespace Foam
        foamYade(const fvMesh& meshm, 
                 const volVectorField& u, 
                       volVectorField& usource, 
-                      volVectorField& urelvel, 
+                      volVectorField& uparticle, 
                       volScalarField& volfrac,
                 const volVectorField& pgrad, 
                 const volTensorField& gradv,
@@ -93,7 +93,7 @@ namespace Foam
                 const volVectorField& ddtuf, 
                        bool gaussianinterp) :
                       mesh(meshm), U(u), uSource(usource), 
-                      uRelVel(urelvel), alpha(volfrac), gradp(pgrad),
+                      uParticle(uparticle), alpha(volfrac), gradp(pgrad),
                       vGrad(gradv), divT(divergencestress), 
                       uSourceDrag(dragcoeff), ddtU_f(ddtuf), 
                       mshTree(mesh.C()) 

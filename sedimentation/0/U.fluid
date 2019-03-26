@@ -22,7 +22,8 @@ boundaryField
 {
     y1 
     {
-        type            cyclic;
+        type            fixedValue;
+	value 		uniform (0 0 0); 
  
     }
 
@@ -30,7 +31,8 @@ boundaryField
 
     y0 
     {
-        type            cyclic;
+        type            fixedValue;
+	value 		uniform (0 0 0); 
 
     }
 

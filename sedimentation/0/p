@@ -23,13 +23,15 @@ boundaryField
 {
     y1
     {
-        type            cyclic;
+        type            zeroGradient;
+	//value		uniform 0; 
     }
 
 
     y0
     {
-        type            cyclic;
+        type            zeroGradient;
+	//gradient	internalField; 
     }
 
     x0

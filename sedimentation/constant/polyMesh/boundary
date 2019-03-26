@@ -19,23 +19,17 @@ FoamFile
 (
     y1
     {
-        type            cyclic;
-        inGroups        1(cyclic);
+        type            wall;
+        inGroups        1(wall);
         nFaces          625;
         startFace       45000;
-        matchTolerance  0.0001;
-        transform       unknown;
-        neighbourPatch  y0;
     }
     y0
     {
-        type            cyclic;
-        inGroups        1(cyclic);
+        type            wall;
+        inGroups        1(wall);
         nFaces          625;
         startFace       45625;
-        matchTolerance  0.0001;
-        transform       unknown;
-        neighbourPatch  y1;
     }
     x0
     {
