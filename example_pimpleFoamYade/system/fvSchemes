@@ -29,7 +29,8 @@ divSchemes
     default         none;
 
     div(alphaPhi.fluid,U.fluid)    Gauss linearUpwindV unlimited;
-    div(((alpha.fluid*nuEff.fluid)*dev2(T(grad(U.fluid))))) Gauss linear;
+    div(((alpha.fluid*nuEff.fluid)*dev2(T(grad(U.fluid))))) Gauss linear; 
+    div(phi.fluid,U.fluid) Gauss linearUpwindV unlimited; 
 }
 
 laplacianSchemes
