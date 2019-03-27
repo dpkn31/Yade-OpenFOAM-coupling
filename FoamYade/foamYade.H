@@ -25,6 +25,7 @@ namespace Foam
       yadeParticle(){}; 
       scalar  dia; 
       scalar  reynoldsNum; 
+      scalar  vol;  
       point   pos; 
       vector  linearVelocity; 
       vector  rotationalVelocity;
@@ -37,6 +38,8 @@ namespace Foam
       int indx; 
       label inCell;
       long int nIter=0; 
+
+      void calcPartVol(){ vol =(M_PI*std::pow(dia,3.0))/6.0; }
       ~yadeParticle(){}; 
   }; 
 
@@ -50,7 +53,7 @@ namespace Foam
        std::vector<double> particleData; 
        std::vector<int>  particleInProc;
        std::vector<yadeParticle*> localParticle; 
-       std::vector<int> numinCell; 
+       std::vector<label> celltoPartList; 
        std::vector<double> pVolContrib;  
        bool haveParticle;
        void allocArrays(); 
@@ -75,7 +78,7 @@ namespace Foam
        scalar deltaT; 
        scalar interp_range; 
        scalar sigma_interp; 
-       scalar sigma_pi; 
+       scalar sigma_pi;
 
      protected:
 
@@ -103,7 +106,7 @@ namespace Foam
         bool locateParticle(yadeParticle* ); 
         void recvParticle();
         void sendHydroForcePoint(); 
-        void setCellVolFraction(yadeParticle* );
+        void setCellVolFraction(std::vector<yadeParticle*> );
         void initParticleForce(yadeParticle* );  
         void calcInterpWeightGaussian(yadeParticle* );
         void calcInterpWeightDiracDelta(yadeParticle* ); 
@@ -120,7 +123,8 @@ namespace Foam
         void sendHydroForceYade();
         void stokesDragForce(yadeParticle* ); 
         void stokesDragTorque(yadeParticle* );  
-        void haveIndex(const int&, std::vector<double>& );
+        void haveIndex(const int&, std::vector<double>& ); 
+        void buildCelltoPart(std::vector<label>&  ); 
         void setParticleAction(double );  
         ~foamYade(){}; 
 
