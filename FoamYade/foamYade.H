@@ -53,8 +53,7 @@ namespace Foam
        std::vector<double> particleData; 
        std::vector<int>  particleInProc;
        std::vector<yadeParticle*> localParticle; 
-       std::vector<label> celltoPartList; 
-       std::vector<double> pVolContrib;  
+       std::vector< std::pair <label, double> > pVolContrib;  
        bool haveParticle;
        void allocArrays(); 
        const int yadeProc = 0;
@@ -124,7 +123,7 @@ namespace Foam
         void stokesDragForce(yadeParticle* ); 
         void stokesDragTorque(yadeParticle* );  
         void haveIndex(const int&, std::vector<double>& ); 
-        void buildCelltoPart(std::vector<label>&  ); 
+        void buildCelltoPart(std::vector<std::pair <label, double> >&  ); 
         void setParticleAction(double );  
         ~foamYade(){}; 
 
