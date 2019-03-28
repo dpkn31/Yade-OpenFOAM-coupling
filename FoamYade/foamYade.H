@@ -105,7 +105,7 @@ namespace Foam
         bool locateParticle(yadeParticle* ); 
         void recvParticle();
         void sendHydroForcePoint(); 
-        void setCellVolFraction(std::vector<yadeParticle*> );
+        void setCellVolFraction(const std::vector<std::pair<label, double> >&   );
         void initParticleForce(yadeParticle* );  
         void calcInterpWeightGaussian(yadeParticle* );
         void calcInterpWeightDiracDelta(yadeParticle* ); 
@@ -113,17 +113,17 @@ namespace Foam
         void hydroDragForce(yadeParticle* ); 
         void addedMassForce(yadeParticle* ); 
         void buoyancyForce(yadeParticle * ); 
-        void calcHydroForce(yadeParticle* ); 
-        void calcHydroTorque(yadeParticle* ); 
+        void calcHydroForce(); 
+        void calcHydroTorque(); 
         void setSourceZero();  
-        void resetLocalParticle(); 
+        void resetLocalParticleList(std::vector<yadeParticle*>& ); 
         void combineForceToMaster(); 
         void exchangeTimeStep();  
         void sendHydroForceYade();
         void stokesDragForce(yadeParticle* ); 
         void stokesDragTorque(yadeParticle* );  
         void haveIndex(const int&, std::vector<double>& ); 
-        void buildCelltoPart(std::vector<std::pair <label, double> >&  ); 
+        void buildCelltoPartList(std::vector<std::pair <label, double> >&  ); 
         void setParticleAction(double );  
         ~foamYade(){}; 
 

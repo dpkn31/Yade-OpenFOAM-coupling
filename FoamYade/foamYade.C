@@ -22,7 +22,6 @@ void Foam::foamYade::allocArrays(){
   interp_range = std::pow(mesh.V()[0], 0.3333)*3; // assuming uniform mesh, change later.
   sigma_interp = interp_range/2.3548200; // 2*deltaX/(2sqrt(2ln(2))) filter width half maximum; 
   sigma_pi = 1/(std::pow(2*M_PI*sigma_interp*sigma_interp, 1.5)); 
-
   //Initialize alpha 
   alpha = 1.0;  
   
@@ -75,20 +74,20 @@ void Foam::foamYade::setScalarProperties(scalar nu_val, scalar pDensity, scalar 
 }
 
  
-void Foam::foamYade::buildCelltoPartList(std::vector< std::pair<label, double> >& pVolContrib) { 
+void Foam::foamYade::buildCelltoPartList(std::vector<std::pair<label, double> >& pVolContrib) { 
 
   //loop through the local particle list
   if (localParticle.size() ==0 ) {return; }
   
   else { 
-    for (std::vector<yadeParticle*>iterator::pIter = localParticle.begin(); pIter != localParticle.end(); ++pIter) { 
+    for (std::vector<yadeParticle*>::iterator pIter = localParticle.begin(); pIter != localParticle.end(); ++pIter) { 
       // loop through the particle's list of cell ids it's located. 
-      for (unsigned int i=0; i != *pIter -> interpCellWeight.size(); ++i ) {
+      yadeParticle* particle = *pIter;  
+      for (unsigned int i=0; i != particle->interpCellWeight.size(); ++i ) {
         
-        const label& cellid = *pIter -> interpCellWeight[i].first; 
-        const double& weight = *pIter -> interpCellWeight[i].second; 
-        const double& pvol =  *pIter ->vol; 
-
+        const label& cellid = particle-> interpCellWeight[i].first; 
+        const double& weight = particle-> interpCellWeight[i].second; 
+        const double& pvol =  particle-> vol; 
         //check if the particle->cellid exists in the pVolContrib.first()
        if (pVolContrib.size()==0) { 
          pVolContrib.push_back(std::make_pair(cellid, pvol*weight)); 
@@ -105,7 +104,7 @@ void Foam::foamYade::buildCelltoPartList(std::vector< std::pair<label, double> >
   }
 }
 
-void Foam::foamYade::resetLocalParticle()
+void Foam::foamYade::resetLocalParticleList(std::vector<yadeParticle*>& localParticle)
 {
 
   const std::size_t& vec_sz = localParticle.size(); 
@@ -196,7 +195,7 @@ void Foam::foamYade::sendHydroForcePoint()
     }
   }
   
-  resetLocalParticle(); 
+  resetLocalParticleList(localParticle); 
 }
 
 
@@ -209,21 +208,51 @@ void Foam::foamYade::initParticleForce(yadeParticle* particle) {
 
 
 
-void Foam::foamYade::calcHydroForce(yadeParticle* particle){
+void Foam::foamYade::calcHydroForce(){
 
-if(isGaussianInterp){
-
-  initParticleForce(particle);
-//   archimedesForce(particle); 
-  hydroDragForce(particle); 
- //  addedMassForce(particle); 
-//  buoyancyForce(particle); 
+  for (std::vector<yadeParticle*>::iterator pIter = localParticle.begin();  pIter != localParticle.end(); pIter++) { 
+    yadeParticle* particle = *pIter; 
+    if(isGaussianInterp){
+      initParticleForce(particle);
+    //   archimedesForce(particle); 
+      hydroDragForce(particle); 
+     //  addedMassForce(particle); 
+    //  buoyancyForce(particle); 
+    }
+      else { 
+        stokesDragForce(particle); 
+      }
+   }
 }
-  else { 
-    stokesDragForce(particle); 
+
+
+
+void Foam::foamYade::calcHydroTorque(yadeParticle* particle) {
+
+    for (std::vector<yadeParticle*>::iterator pIter = localParticle.begin();  pIter != localParticle.end(); pIter++) {   
+
+      yadeParticle* particle = *pIter; 
+
+     if (isGaussianInterp){
+
+     for (unsigned int i=0; i!= particle -> interpCellWeight.size(); ++i) 
+     {
+       const int& cellid = particle -> interpCellWeight[i].first; 
+       const double& weight = particle -> interpCellWeight[i].second; 
+       // const double& cellvol =  mesh.V()[cellid];  
+
+       const scalar& s1 = (vGrad[cellid].yz() - vGrad[cellid].zy())*weight; 
+       const scalar& s2 = (vGrad[cellid].zx() - vGrad[cellid].xz())*weight; 
+       const scalar& s3 = (vGrad[cellid].xy() - vGrad[cellid].yx())*weight; 
+       const vector wfluid(s1,s2,s3); 
+       particle -> hydroTorque += M_PI*(pow(particle -> dia, 3))*(wfluid - particle-> rotationalVelocity)*nu*fluidDensity; 
+     
+     }
+
+    } else {stokesDragTorque(particle);  }
   }
-
 }
+
 
 
 void Foam::foamYade::buoyancyForce(yadeParticle* particle) { 
@@ -239,11 +268,8 @@ void Foam::foamYade::buoyancyForce(yadeParticle* particle) {
     vecgravity*=weight;  
     vector f = (partDensity - fluidDensity)*vecgravity*pvol; 
     uSource[cellid] += (-f/cellvol); 
-    particle -> hydroForce += (f); 
-  
+    particle -> hydroForce += (f);   
   }
-
-
 }
 
 
@@ -265,8 +291,7 @@ void Foam::foamYade::stokesDragTorque(yadeParticle* particle)  {
 }
 
 
-
-void Foam::foamYade::setCellVolFraction(std::vector< std::pair<label,double> > pVolContrib ){
+void Foam::foamYade::setCellVolFraction(const std::vector<std::pair<label,double> >&  pVolContrib ){
 
   if (pVolContrib.size()==0){return;}
   for (unsigned int i=0; i != pVolContrib.size(); ++i) { 
@@ -277,29 +302,6 @@ void Foam::foamYade::setCellVolFraction(std::vector< std::pair<label,double> > p
   
 }
 
-
-//void Foam::foamYade::setCellVolFraction(yadeParticle* particle) //interpCellWeight vector<pair<id,weight>>
-//{
-//
-// if (isGaussianInterp){ 
-//
-//    calcInterpWeightGaussian(particle);  
-//    scalar pvol = M_PI*pow(particle->dia,3)/6.0;
-//    for (unsigned int i=0; i != particle ->interpCellWeight.size(); ++i){
-//    
-//      const int& cellid = particle->interpCellWeight[i].first; 
-//      const double& weight = particle-> interpCellWeight[i].second; 
-//      const scalar& pf = (pvol* weight); 
-//      pVolContrib[cellid] += pf; 
-////       numinCell[cellid] +=1; 
-//      alpha[cellid] = (1-(pVolContrib[cellid]/mesh.V()[cellid])); 
-//      Info << "cell vol frac = " << alpha[cellid] << endl; 
-//  }
-// 
-// } else { return ;}
-//
-//}
-//
 
 void Foam::foamYade::archimedesForce(yadeParticle* particle)
 {
@@ -321,32 +323,6 @@ void Foam::foamYade::archimedesForce(yadeParticle* particle)
 }
 
 
-
-void Foam::foamYade::calcHydroTorque(yadeParticle* particle)
-{
-
-  if (isGaussianInterp){
-
-  for (unsigned int i=0; i!= particle -> interpCellWeight.size(); ++i) 
-  {
-    const int& cellid = particle -> interpCellWeight[i].first; 
-    const double& weight = particle -> interpCellWeight[i].second; 
-    // const double& cellvol =  mesh.V()[cellid];  
-
-    const scalar& s1 = (vGrad[cellid].yz() - vGrad[cellid].zy())*weight; 
-    const scalar& s2 = (vGrad[cellid].zx() - vGrad[cellid].xz())*weight; 
-    const scalar& s3 = (vGrad[cellid].xy() - vGrad[cellid].yx())*weight; 
-    const vector wfluid(s1,s2,s3); 
-    particle -> hydroTorque += M_PI*(pow(particle -> dia, 3))*(wfluid - particle-> rotationalVelocity)*nu*fluidDensity; 
-  
-  }
-
- } else {stokesDragTorque(particle);  }
-
-}
-
-
-
 void Foam::foamYade::addedMassForce(yadeParticle* particle) 
 {
   // const volVectorField& ddtU_f = fvc::ddt(U)+fvc::div(phi, U); 
@@ -365,9 +341,6 @@ void Foam::foamYade::addedMassForce(yadeParticle* particle)
   }
 
 }
-
-
-
 
 void Foam::foamYade::hydroDragForce(yadeParticle* particle){  
   // tp = rho_p(d**2)/18mu;                     
@@ -411,7 +384,6 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
 
 }
 
-
 void Foam::foamYade::combineForceToMaster(){
   
   double dummy;
@@ -422,7 +394,7 @@ void Foam::foamYade::combineForceToMaster(){
       comm.procReduceSumDouble(values[j], dummy); 
     }
   }
-  resetLocalParticle(); 
+  resetLocalParticleList(localParticle); 
 }
 
 
@@ -449,7 +421,6 @@ void Foam::foamYade::exchangeTimeStep() {
   comm.cast_one_double(yadeProc, yadeDt); 
 
 }
-
 
 void Foam::foamYade::haveIndex(const int& pIndex, std::vector<double>& values) { 
 
@@ -480,7 +451,10 @@ void Foam::foamYade::sendHydroForceYade() {
 void Foam::foamYade::setParticleAction(double dt) {
 
   deltaT = dt;
-  locateAllParticle(); 
+  locateAllParticle();
+  setCellVolFraction(); 
+  calcHydroForce(); 
+  calcHydroTorque();  
   sendHydroForceYade(); 
   exchangeTimeStep();  
 
