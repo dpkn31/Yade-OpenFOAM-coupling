@@ -216,7 +216,7 @@ void Foam::foamYade::calcHydroForce(){
 }
 
 
-void Foam::foamYade::calcHydroTorque(yadeParticle* particle) {
+void Foam::foamYade::calcHydroTorque() {
 
     for (std::vector<yadeParticle*>::iterator pIter = localParticle.begin();  pIter != localParticle.end(); pIter++) {   
 
@@ -394,7 +394,7 @@ void Foam::foamYade::setSourceZero() {
     uParticle[cellI].y() = 0.0; 
     uParticle[cellI].z() = 0.0; 
     uSourceDrag[cellI] = 0.0; 
-    pVolContrib.clear();  
+    clearPvolContrib(pVolContrib);   
   } 
 } 
 
@@ -431,13 +431,17 @@ void Foam::foamYade::sendHydroForceYade() {
     sendHydroForcePoint(); 
   }
 
+} 
+
+void Foam::foamYade::clearPvolContrib(std::vector<std::pair<label, double> >& pVolContrib ) { 
+  pVolContrib.clear(); 
 }
 
 void Foam::foamYade::setParticleAction(double dt) {
 
   deltaT = dt;
   locateAllParticle();
-  setCellVolFraction(); 
+  setCellVolFraction(pVolContrib); 
   calcHydroForce(); 
   calcHydroTorque();  
   sendHydroForceYade(); 

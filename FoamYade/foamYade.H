@@ -124,7 +124,8 @@ namespace Foam
         void stokesDragTorque(yadeParticle* );  
         void haveIndex(const int&, std::vector<double>& ); 
         void buildCelltoPartList(std::vector<std::pair <label, double> >&  ); 
-        void setParticleAction(double );  
+        void setParticleAction(double );
+        void clearPvolContrib(std::vector<std::pair<label, double> >& );   
         ~foamYade(){}; 
 
   };
