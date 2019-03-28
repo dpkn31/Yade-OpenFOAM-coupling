@@ -39,7 +39,7 @@ namespace Foam
       label inCell;
       long int nIter=0; 
 
-      void calcPartVol(){ vol =(M_PI*std::pow(dia,3.0))/6.0; }
+      void calcPartVol(const double& dia){ vol =(M_PI*std::pow(dia,3.0))/6.0; }
       ~yadeParticle(){}; 
   }; 
 
@@ -107,7 +107,7 @@ namespace Foam
         void sendHydroForcePoint(); 
         void setCellVolFraction(const std::vector<std::pair<label, double> >&   );
         void initParticleForce(yadeParticle* );  
-        void calcInterpWeightGaussian(yadeParticle* );
+        void calcInterpWeightGaussian(std::vector<yadeParticle*>&  );
         void calcInterpWeightDiracDelta(yadeParticle* ); 
         void archimedesForce(yadeParticle* );  
         void hydroDragForce(yadeParticle* ); 
