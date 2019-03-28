@@ -141,7 +141,7 @@ void Foam::foamYade::locateAllParticle()
            particle->rotationalVelocity.x()=particleData[i*10+6]; 
            particle->rotationalVelocity.y()=particleData[i*10+7]; 
            particle->rotationalVelocity.z()=particleData[i*10+8]; 
-           particle->dia = particleData[i*10+9]; 
+           particle->dia = 2*particleData[i*10+9]; 
            particle -> calcPartVol();  
  
         }
@@ -153,10 +153,7 @@ void Foam::foamYade::locateAllParticle()
   }
 }
 
-
- 
-bool Foam::foamYade::locateParticle(yadeParticle* aParticle)    
-{
+bool Foam::foamYade::locateParticle(yadeParticle* aParticle){
 
     bool value = false;
    if (isGaussianInterp ){ 
@@ -170,9 +167,7 @@ bool Foam::foamYade::locateParticle(yadeParticle* aParticle)
 }
 
 
-
-void Foam::foamYade::sendHydroForcePoint() 
-{
+void Foam::foamYade::sendHydroForcePoint() {
  
   for (int i=0; i != numParticles; ++i)
   {
@@ -188,16 +183,12 @@ void Foam::foamYade::sendHydroForcePoint()
            comm.sendOneDouble(yadeProc,localParticle[ii]->hydroTorque.x()); 
            comm.sendOneDouble(yadeProc,localParticle[ii]->hydroTorque.y());
            comm.sendOneDouble(yadeProc,localParticle[ii]->hydroTorque.z());
-
          }
       }
-      
     }
   }
-  
   resetLocalParticleList(localParticle); 
 }
-
 
 void Foam::foamYade::initParticleForce(yadeParticle* particle) {
 
@@ -205,7 +196,6 @@ void Foam::foamYade::initParticleForce(yadeParticle* particle) {
   particle->hydroForce = nullV; 
   particle->hydroTorque = nullV; 
 }
-
 
 
 void Foam::foamYade::calcHydroForce(){
@@ -224,7 +214,6 @@ void Foam::foamYade::calcHydroForce(){
       }
    }
 }
-
 
 
 void Foam::foamYade::calcHydroTorque(yadeParticle* particle) {
@@ -252,8 +241,6 @@ void Foam::foamYade::calcHydroTorque(yadeParticle* particle) {
     } else {stokesDragTorque(particle);  }
   }
 }
-
-
 
 void Foam::foamYade::buoyancyForce(yadeParticle* particle) { 
  
@@ -290,7 +277,6 @@ void Foam::foamYade::stokesDragTorque(yadeParticle* particle)  {
 
 }
 
-
 void Foam::foamYade::setCellVolFraction(const std::vector<std::pair<label,double> >&  pVolContrib ){
 
   if (pVolContrib.size()==0){return;}
@@ -301,7 +287,6 @@ void Foam::foamYade::setCellVolFraction(const std::vector<std::pair<label,double
   }
   
 }
-
 
 void Foam::foamYade::archimedesForce(yadeParticle* particle)
 {
