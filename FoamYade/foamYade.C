@@ -46,7 +46,6 @@ void Foam::foamYade::calcInterpWeightGaussian(std::vector<yadeParticle*>& localP
        const double& ds3 = mesh.C()[particle -> cellIds[i]].z() - particle -> pos.z(); 
        distsq = (ds1*ds1)+(ds2*ds2)+(ds3*ds3); 
        double weight = exp(-distsq/(2*std::pow(sigma_interp, 2)))*sigma_pi*interp_range_cu; 
-
        particle -> interpCellWeight.push_back(std::make_pair(particle-> cellIds[i],weight)); 
        
      }
@@ -291,11 +290,12 @@ void Foam::foamYade::stokesDragTorque(yadeParticle* particle)  {
 
 void Foam::foamYade::setCellVolFraction(const std::vector<std::pair<label,double> >&  pVolContrib ){
 
+
   if (pVolContrib.size()==0){return;}
   for (unsigned int i=0; i != pVolContrib.size(); ++i) { 
     const label& id = pVolContrib[i].first; 
-    const double& pvolc = pVolContrib[i].second; 
-    alpha[id] = 1.0- (pvolc/mesh.V()[id]); 
+    const double& pvolc = 1.0- (pVolContrib[i].second/mesh.V()[id]); 
+    alpha[id] =  ((pvolc > 0) ? pvolc : 1e-06); 
   }
   
 }
@@ -325,7 +325,7 @@ void Foam::foamYade::addedMassForce(yadeParticle* particle)
   // const volVectorField& ddtU_f = fvc::ddt(U)+fvc::div(phi, U); 
   const scalar& pvol = (M_PI*std::pow(particle->dia,3))/6.0;
   
-  std::cout << "In here " << std::endl;  
+
   for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i) { 
     const int& cellid = particle -> interpCellWeight[i].first; 
     const double& weight = particle -> interpCellWeight[i].second;
@@ -350,7 +350,7 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
     const int& cellid = particle -> interpCellWeight[i].first; 
     const double& weight = particle -> interpCellWeight[i].second; 
     const vector& ufluid = U[cellid]*weight;  
-    const double& oo_cellvol = 1.0/mesh.V()[cellid]; 
+    const double& oo_cellvol = 1.0/(fluidDensity*mesh.V()[cellid]); 
     
     const scalar& alpha_f = alpha[cellid]; 
     const vector& rv = ufluid-particle->linearVelocity; 
@@ -373,7 +373,7 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
     const scalar& coeff = (0.75*Cd*magrv*std::pow(alpha_f, -2.65))*(1/particle->dia);
     const scalar& alpha_p = 1-alpha_f; 
     uSourceDrag[cellid] += (-1.0*alpha_p*coeff);
-    uSource[cellid] += (-1.0*alpha_p*coeff*uParticle[cellid]); ; 
+    uSource[cellid] += (-1.0*alpha_p*coeff*uParticle[cellid]);  
     particle->hydroForce += (pvol*partDensity*coeff*rv); 
     }
 
