@@ -19,9 +19,10 @@ void Foam::foamYade::allocArrays(){
 //  numinCell.assign(mesh.V().size(), 0); 
 //  pVolContrib.assign(mesh.V().size(),0.0); 
   mshTree.build_tree();  
-  interp_range = 2*std::pow(mesh.V()[0], 1.0/3.0); // assuming uniform mesh, change later.
-  sigma_interp = interp_range/0.42460; // 2*deltaX/(2sqrt(2ln(2))) filter width half maximum; 
+  interp_range = 2*std::pow(mesh.V()[0], 1.0/3.0); // assuming uniform mesh, change later. 
+  sigma_interp = interp_range*0.42460; // interp_range/(2sqrt(2ln(2))) filter width half maximum; 
   sigma_pi = 1.0/(std::pow(2*M_PI*sigma_interp*sigma_interp, 1.5)); 
+  interp_range_cu = interp_range*interp_range*interp_range;  
   //Initialize alpha 
   alpha = 1.0;  
   
@@ -44,7 +45,7 @@ void Foam::foamYade::calcInterpWeightGaussian(std::vector<yadeParticle*>& localP
        const double& ds2 = mesh.C()[particle -> cellIds[i]].y() - particle -> pos.y(); 
        const double& ds3 = mesh.C()[particle -> cellIds[i]].z() - particle -> pos.z(); 
        distsq = (ds1*ds1)+(ds2*ds2)+(ds3*ds3); 
-       double weight = exp(-distsq/(2*std::pow(sigma_interp, 2)))*sigma_pi*mesh.V()[particle->cellIds[i]]; 
+       double weight = exp(-distsq/(2*std::pow(sigma_interp, 2)))*sigma_pi*interp_range_cu; 
 
        particle -> interpCellWeight.push_back(std::make_pair(particle-> cellIds[i],weight)); 
        
@@ -98,7 +99,6 @@ void Foam::foamYade::buildCelltoPartList(std::vector<std::pair<label, double> >&
         const double& weight = particle-> interpCellWeight[i].second; 
         const double& pvol =  particle-> vol;
 
-       if(weight > 0.25) std::cout << "pweight = " << weight << std::endl; 
         //check if the particle->cellid exists in the pVolContrib.first()
        if (pVolContrib.size()==0) { 
          pVolContrib.push_back(std::make_pair(cellid, pvol*weight)); 
@@ -296,8 +296,6 @@ void Foam::foamYade::setCellVolFraction(const std::vector<std::pair<label,double
     const label& id = pVolContrib[i].first; 
     const double& pvolc = pVolContrib[i].second; 
     alpha[id] = 1.0- (pvolc/mesh.V()[id]); 
-    Info << " vf  = " << alpha[id] << endl;
-
   }
   
 }

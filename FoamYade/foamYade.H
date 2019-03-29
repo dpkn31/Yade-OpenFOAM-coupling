@@ -75,7 +75,8 @@ namespace Foam
        scalar nu;
        scalar fluidDensity; 
        scalar deltaT; 
-       scalar interp_range; 
+       scalar interp_range;
+       scalar interp_range_cu;  
        scalar sigma_interp; 
        scalar sigma_pi;
 
