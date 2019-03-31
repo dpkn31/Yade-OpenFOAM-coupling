@@ -20,52 +20,48 @@ internalField   uniform 0 ;
 
 boundaryField
 {
-    y1 
-    {
-        type            zeroGradient;
- 
-    }
+  y1
+  {
+      type            cyclic;
+
+  }
 
 
 
-    y0 
-    {
-        type            fixedValue;
-	value 		uniform 0; 
+  y0
+  {
+      type            cyclic;
 
-    }
-
+  }
 
 
+  x1
+  {
+      type            cyclic;
 
-    x0 
-    {
-        type            cyclic;
-    
-    }
+  }
 
 
 
+  x0
+  {
+      type            cyclic;
 
-    x1 
-    {
-        type            cyclic;
-    
-    }
+  }
 
 
-    z1 
+    z1
     {
         type            cyclic;
-    
+
     }
 
 
 
-    z0 
+    z0
     {
         type            cyclic;
-    
+
     }
 
 

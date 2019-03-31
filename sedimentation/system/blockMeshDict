@@ -19,18 +19,18 @@ convertToMeters 1;
 vertices
 (
     (0 0 0)		//0
-    (0.012 0 0)		//1
-    (0.012 0.012 0)	//2
-    (0 0.012 0)		//3
-    (0 0 0.012)		//4
-    (0.012 0 0.012)	//5
-    (0.012 0.012 0.012)	//6
-    (0 0.012 0.012)	//7
+    (0.12 0 0)		//1
+    (0.12 0.24 0)	//2
+    (0 0.24 0)		//3
+    (0 0 0.12)		//4
+    (0.12 0 0.12)	//5
+    (0.12 0.24 0.12)	//6
+    (0 0.24 0.12)	//7
 );
 
 blocks
 (
-    hex (0 1 2 3 4 5 6 7) (25 25 25) simpleGrading (1 1 1)
+    hex (0 1 2 3 4 5 6 7) (25 50 25) simpleGrading (1 1 1)
 );
 
 edges
@@ -41,7 +41,8 @@ boundary
 (
     y1
     {
-        type wall;
+        type cyclic;
+        neighbourPatch y0;
         faces
         (
             (2 3 6 7)
@@ -52,8 +53,8 @@ boundary
     y0
     {
 
-        type wall;
-        neighbourPatch y1; 
+        type cyclic;
+        neighbourPatch y1;
         faces
         (
             (0 1 5 4)
@@ -65,44 +66,44 @@ boundary
     x0
     {
         type cyclic;
-        neighbourPatch x1; 
-        faces 
+        neighbourPatch x1;
+        faces
         (
             (4 7 3 0)
-        ); 
+        );
     }
 
 
     x1
     {
-        type cyclic; 
+        type cyclic;
         neighbourPatch x0;
-        faces 
+        faces
         (
             (5 1 2 6)
-        ); 
+        );
     }
 
 
     z0
     {
-        type cyclic; 
-        neighbourPatch z1; 
-        faces 
+        type cyclic;
+        neighbourPatch z1;
+        faces
         (
             (0 1 2 3)
-        ); 
+        );
     }
 
 
     z1
     {
-        type cyclic; 
-        neighbourPatch z0; 
-        faces 
+        type cyclic;
+        neighbourPatch z0;
+        faces
         (
             (4 5 6 7)
-        ); 
+        );
     }
 
 
