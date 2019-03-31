@@ -369,8 +369,8 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
 
     const vector& f = coeff*rv*weight;
     particle->hydroForce +=  f;
-    uSourceDrag[cellid] +=  (-1*coeff*oo_cellvol);
-    uSource[cellid] += (-1*coeff*(particle->linearVelocity*weight)*oo_cellvol);
+    uSourceDrag[cellid] +=  (-1*coeff*oo_cellvol*weight);
+    uSource[cellid] += (-1*coeff*(particle->linearVelocity*weight)*oo_cellvol*weight);
   // } else  {
   //   const scalar& Cd = (24.0/Re)*(1+(0.15*std::pow(Re, 0.687)));  //
   //   const scalar& coeff = (0.75*Cd*magrv*std::pow(alpha_f, -2.65))*(1/particle->dia);
