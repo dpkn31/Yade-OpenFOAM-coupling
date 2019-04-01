@@ -267,10 +267,10 @@ void Foam::foamYade::buoyancyForce(yadeParticle* particle) {
     const int& cellid = particle -> interpCellWeight[i].first;
     const double& weight = particle -> interpCellWeight[i].second;
     const double& cellvol =  mesh.V()[cellid]*fluidDensity;
-    vector vecgravity(0,-9.81, 0);
+    vector vecgravity(0,-30.0, 0);
     vector f = (partDensity - fluidDensity)*vecgravity*(pvol)*weight;
     uSource[cellid] += ((-f*weight)/cellvol);
-    particle -> hydroForce += (f*weight);
+    particle -> hydroForce += (f);
   }
 }
 
