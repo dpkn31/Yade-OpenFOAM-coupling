@@ -34,7 +34,7 @@ Description
 #include "fvCFD.H"
 #include "singlePhaseTransportModel.H"
 #include "PhaseIncompressibleTurbulenceModel.H"
-#include "pimpleControl.H" 
+#include "pimpleControl.H"
 #include "foamYade.H"
 
 int main(int argc, char *argv[])
@@ -52,16 +52,18 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl;
 
-    
-    bool gaussianInterp = true; 
-    foamYade yadeCoupling(mesh,Uc, uSource, uRelVel, alphac, gradP,vGrad,divT,uSourceDrag,ddtU_f,gaussianInterp); 
-    yadeCoupling.setScalarProperties(nuValue.value(), partDensity.value(), 1000); 
+
+    bool gaussianInterp = true;
+    foamYade yadeCoupling(mesh,Uc, uSource, uParticle, alphac, gradP,vGrad,divT,uSourceDrag,ddtU_f,gaussianInterp);
+    yadeCoupling.setScalarProperties(nuValue.value(), partDensity.value(), 1000);
 
 
-   forAll(Uc, cellI) { 
-     Uc[cellI].x() = (4.0*mesh.C()[cellI].y())-2.0; 
-   } 
-    
+  forAll(Uc, cellI) {
+    Uc[cellI].x() = 0.0;
+    Uc[cellI].y() = 0.0;
+    Uc[cellI].z() = 0.0;
+  }
+//
     while (runTime.run())
     {
         #include "readTimeControls.H"
@@ -75,20 +77,20 @@ int main(int argc, char *argv[])
         continuousPhaseTransport.correct();
         muc = rhoc*continuousPhaseTransport.nu();
 
-        // upadte gradp, divT, and 
-        
-        ddtU_f = fvc::ddt(Uc)+fvc::div(phic, Uc); 
-        gradP = fvc::grad(p); 
-        divT = 2*nuValue.value()*fvc::laplacian(alphac, Uc); 
-        vGrad = fvc::grad(Uc); 
+        // upadte gradp, divT, and
+
+        ddtU_f = fvc::ddt(Uc)+fvc::div(phic, Uc);
+        gradP = fvc::grad(p);
+        divT = 2*nuValue.value()*fvc::laplacian(alphac, Uc);
+        vGrad = fvc::grad(Uc);
 
 
-        scalar dt = runTime.deltaT().value(); 
-        yadeCoupling.setParticleAction(dt); 
+        scalar dt = runTime.deltaT().value();
+        yadeCoupling.setParticleAction(dt);
 
 
         alphacf = fvc::interpolate(alphac);
-        alphaPhic = alphacf*phic; 
+        alphaPhic = alphacf*phic;
 
 
 
@@ -110,7 +112,7 @@ int main(int argc, char *argv[])
         }
 
         runTime.write();
-        yadeCoupling.setSourceZero(); 
+        yadeCoupling.setSourceZero();
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"

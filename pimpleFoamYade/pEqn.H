@@ -35,15 +35,15 @@
         pEqn.setReference(pRefCell, pRefValue);
 
         pEqn.solve(mesh.solver(p.select(pimple.finalInnerIter())));
-
+        alphacf += 1e-20; 
         if (pimple.finalNonOrthogonalIter())
         {
-            phic = phiHbyA - pEqn.flux()/(alphacf+1e-20);
+            phic = phiHbyA - pEqn.flux()/(alphacf);
 
             p.relax();
 
             Uc = HbyA
-              + rAUc*fvc::reconstruct((phicForces - pEqn.flux()/(alphacf+1e-20))/rAUcf);
+              + rAUc*fvc::reconstruct((phicForces - pEqn.flux()/(alphacf))/rAUcf);
             Uc.correctBoundaryConditions();
         }
     }
