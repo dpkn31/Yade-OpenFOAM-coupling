@@ -19,7 +19,7 @@ void Foam::foamYade::allocArrays(){
 //  numinCell.assign(mesh.V().size(), 0);
 //  pVolContrib.assign(mesh.V().size(),0.0);
   mshTree.build_tree();
-  interp_range = 2*std::pow(mesh.V()[0], 1.0/3.0); // assuming uniform mesh, change later.
+  interp_range = 3*std::pow(mesh.V()[0], 1.0/3.0); // assuming uniform mesh, change later.
   sigma_interp = interp_range*0.42460; // interp_range/(2sqrt(2ln(2))) filter width half maximum;
   sigma_pi = 1.0/(std::pow(2*M_PI*sigma_interp*sigma_interp, 1.5));
   interp_range_cu = interp_range*interp_range*interp_range;
@@ -267,10 +267,10 @@ void Foam::foamYade::buoyancyForce(yadeParticle* particle) {
     const int& cellid = particle -> interpCellWeight[i].first;
     const double& weight = particle -> interpCellWeight[i].second;
     const double& cellvol =  mesh.V()[cellid]*fluidDensity;
-    vector vecgravity(0,-30.0, 0);
+    vector vecgravity(0,-10.0, 0);
     vector f = (partDensity - fluidDensity)*vecgravity*(pvol)*weight;
     uSource[cellid] += ((-f*weight)/cellvol);
-    particle -> hydroForce += (f);
+    particle -> hydroForce += (f*weight);
   }
 }
 
