@@ -1,7 +1,7 @@
 {
 
     volVectorField HbyA(constrainHbyA(rAUc*UcEqn.H(), Uc, p));
-
+    
     surfaceScalarField phiHbyA
     (
         "phiHbyA",
@@ -21,7 +21,6 @@
 
     // Update the pressure BCs to ensure flux consistency
     constrainPressure(p, Uc, phiHbyA, rAUcf);
-
     // Non-orthogonal pressure corrector loop
     while (pimple.correctNonOrthogonal())
     {
@@ -35,7 +34,7 @@
         pEqn.setReference(pRefCell, pRefValue);
 
         pEqn.solve(mesh.solver(p.select(pimple.finalInnerIter())));
-        alphacf += 1e-20; 
+
         if (pimple.finalNonOrthogonalIter())
         {
             phic = phiHbyA - pEqn.flux()/(alphacf);
