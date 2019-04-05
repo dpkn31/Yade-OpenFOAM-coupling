@@ -67,6 +67,7 @@ namespace Foam
        const volVectorField& divT; // fvc::laplacian((U))
        volScalarField& uSourceDrag;
        const volVectorField& ddtU_f;
+       const uniformDimensionedVectorField& gravity;
        yadeComm comm;
        bool recvdParticleData;
        bool isGaussianInterp;
@@ -94,12 +95,13 @@ namespace Foam
                 const volVectorField& divergencestress,
                       volScalarField& dragcoeff,
                 const volVectorField& ddtuf,
+                       uniformDimensionedVectorField& gravityf,
                        bool gaussianinterp) :
                       mesh(meshm), U(u), uSource(usource),
                       uParticle(uparticle), alpha(volfrac), gradp(pgrad),
                       vGrad(gradv), divT(divergencestress),
                       uSourceDrag(dragcoeff), ddtU_f(ddtuf),
-                      mshTree(mesh.C())
+                      gravity(gravityf), mshTree(mesh.C())
                       {allocArrays(); isGaussianInterp=gaussianinterp;  };
         void setScalarProperties(scalar, scalar, scalar);
         void locateAllParticle();
