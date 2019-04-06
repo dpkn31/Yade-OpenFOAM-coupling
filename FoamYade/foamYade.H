@@ -131,7 +131,9 @@ namespace Foam
                                 std::vector<std::pair <label, vector> >& );
         void setParticleAction(double );
         void clearPvolContrib(std::vector<std::pair<label, double> >&,
-                              std::vector<std::pair <label,vector> >& );
+                              std::vector<std::pair <label,vector> >& ); 
+
+        void updateSources(std::vector<std::pair<label, double> >& ); 
         ~foamYade(){};
 
   };

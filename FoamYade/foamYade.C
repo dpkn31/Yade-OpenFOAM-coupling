@@ -33,7 +33,7 @@ void Foam::foamYade::allocArrays(){
     uSourceDrag[cellI] = 1e-15;
     uParticle[cellI].x() = 1e-15;
     uParticle[cellI].y() = 1e-15;
-    uParticle[cellI].z() = 1e-15; //  too bad can't use std::fill and a single line to set this up.
+    uParticle[cellI].z() = 1e-15; //  no std::fill 
   }
 }
 
@@ -306,7 +306,7 @@ void Foam::foamYade::stokesDragForce(yadeParticle* particle) {
 
 /************************************************************************************/
 
-void Foam::foamYade::stokesDragTorque(yadeParticle* particle)  {
+void Foam::foamYade::stokesDragTorque(yadeParticle* particle){
 
   autoPtr<interpolation<tensor>> interpGradU = interpolation<tensor>::New("cell",vGrad); //
   const tensor& uGradpt = interpGradU->interpolate(particle->pos, particle->inCell);
@@ -395,7 +395,7 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
   vector uf(0,0,0);
   double alpha_p = 0;
   double small = 1e-09;
-
+  double pv = 0.0; 
   //get the velocities:
   //inteprolate fluid velocity to particle loc. and get the average particle vol frac
 
@@ -404,6 +404,7 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
     const double& wt = particle->interpCellWeight[i].second;
     uf = uf + (U[cellid]*wt);
     alpha_p = alpha_p + ((1-alpha[cellid])*wt);
+    pv = pv + (particle->vol*wt); 
   }
 
   alpha_p = alpha_p/(particle-> interpCellWeight.size());
@@ -417,7 +418,7 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
   const double& pw = std::pow(Re, 0.687);
   const scalar& Cd = (24/Re)*(1+(0.15*pw));
   const double& coeff = (0.75*Cd*fluidDensity*magUrelVel)*(1/particle->dia)*(std::pow(alpha_f, -2.65));
-  const vector& f = ((particle->vol))*coeff*uRelVel;
+  const vector& f = (pv)*coeff*uRelVel*alpha_f;
 
   particle-> hydroForce += f;
 
@@ -426,7 +427,7 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
   for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) {
     const double& weight = particle -> interpCellWeight[i].second;
     const int& id = particle -> interpCellWeight[i].first;
-    const scalar& value = (-coeff*weight);
+    const scalar& value = (-coeff*weight*(1-alpha[id]));
     uSourceDrag[id] = uSourceDrag[id] + (value/fluidDensity);  //implicit source (scalar)
     uSource[id] = uSource[id] + ((value*uParticle[id])/fluidDensity); // explicit source term (with averaged particle velocity);
   }
@@ -500,19 +501,19 @@ void Foam::foamYade::sendHydroForceYade() {
 }
 
 /************************************************************************************/ 
-//void Foam::foamYade::updateSources(std::vector<std::pair<label, double> >& pVolContrib ) {
-//
-//  for (unsigned int i=0; i != pVolContrib.size(); ++i){
-//
-//    const label& cellid  = pVolContrib[i].first;
-//    const double& pvolc = pVolContrib[i].second; 
-//    const double& alpha_p = pvolc/mesh.V()[cellid]; 
-//    uSourceDrag[cellid] = alpha_p*uSourceDrag[cellid]; 
-//    uSource[cellid] = alpha_p*uSource[cellid]; 
-//
-//  }
-//}
-//
+void Foam::foamYade::updateSources(std::vector<std::pair<label, double> >& pVolContrib ) {
+
+  for (unsigned int i=0; i != pVolContrib.size(); ++i){
+
+    const label& cellid  = pVolContrib[i].first;
+    const double& pvolc = pVolContrib[i].second; 
+    const double& alpha_p = pvolc/mesh.V()[cellid]; 
+    uSourceDrag[cellid] = alpha_p*uSourceDrag[cellid]; 
+    uSource[cellid] = alpha_p*uSource[cellid]; 
+
+  }
+}
+
 /************************************************************************************/
 
 
@@ -533,6 +534,7 @@ void Foam::foamYade::setParticleAction(double dt) {
   setCellVolFraction(pVolContrib, uParticleContrib);  // calculate the fluid volfraction in the cells and set the particle velocity in the eulerian grid.
   calcHydroForce();       // calculate the hydrodynamic forces
 //  calcHydroTorque();    // calculate the hydrodynamic torques.
+//  updateSources(pVolContrib); 
   sendHydroForceYade();   // send info to yade
   exchangeTimeStep();     // exchange timesteps between yade and openfoam
 
