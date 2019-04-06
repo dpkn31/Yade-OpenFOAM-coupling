@@ -68,7 +68,7 @@ volVectorField uParticle(
 ); 
 //
 
-volScalarField alpha
+volScalarField alphac
 (
     IOobject
     (
@@ -144,7 +144,32 @@ volVectorField gradP(
 
 
 
+
+volScalarField uSourceDrag(
+    IOobject(
+      "uSourceDrag",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::NO_WRITE),
+    mesh,
+    dimensionedScalar("dragCoeff", dimensionSet(0,0,-1,0,0,0,0), 0 )
+);
+
+
 #include "createPhi.H"
+
+
+volVectorField ddtU_f (
+    IOobject (
+      "ddtU_f",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::NO_WRITE),
+      fvc::ddt(U)+fvc::div(phi, U)
+);
+
 
 
 label pRefCell = 0;

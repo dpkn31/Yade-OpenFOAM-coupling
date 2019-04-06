@@ -50,9 +50,9 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl; 
   
-    bool gaussianInterp = false;   
-    foamYade yadecoupling(mesh,U,uSource,uParticle ,alpha, gradP, vGrad, divT,g,gaussianInterp); 
-    yadecoupling.setScalarProperties(nu.value(), partDensity.value(), fluidDensity.value() );
+    bool gaussianInterp = false;  
+    foamYade yadeCoupling(mesh,U, uSource, uParticle, alphac, gradP,vGrad,divT,uSourceDrag,ddtU_f,g,gaussianInterp);
+    yadeCoupling.setScalarProperties(nu.value(), partDensity.value(), fluidDensity.value() );
 
 
 //     shear flow velocity initialization    
@@ -67,8 +67,13 @@ int main(int argc, char *argv[])
         Info<< "Time = " << runTime.timeName() << nl << endl;
         #include "CourantNo.H"
 
+        ddtU_f = fvc::ddt(U)+fvc::div(phi, U);
+        gradP = fvc::grad(p);
+        divT = 2*nu.value()*fvc::laplacian(alphac, U);
+        vGrad = fvc::grad(U);
+
         scalar dt = runTime.deltaT().value(); 
-        yadecoupling.setParticleAction(dt); 
+        yadeCoupling.setParticleAction(dt); 
         // Momentum predictor
 
         fvVectorMatrix UEqn
@@ -130,7 +135,7 @@ int main(int argc, char *argv[])
         }
    
         runTime.write();
-       yadecoupling.setSourceZero(); 
+       yadeCoupling.setSourceZero(); 
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"
