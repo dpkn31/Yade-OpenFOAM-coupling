@@ -57,12 +57,18 @@ void Foam::foamYade::calcInterpWeightGaussian(std::vector<yadeParticle*>& localP
        const double& ds2 = mesh.C()[particle -> cellIds[i]].y() - particle -> pos.y();
        const double& ds3 = mesh.C()[particle -> cellIds[i]].z() - particle -> pos.z();
        distsq = (ds1*ds1)+(ds2*ds2)+(ds3*ds3);
-       double weight = exp(-distsq/(2*std::pow(sigma_interp, 2)))*sigma_pi*interp_range_cu;
+       double weight = exp(-distsq/(2*std::pow(sigma_interp, 2)));
        particle -> interpCellWeight.push_back(std::make_pair(particle-> cellIds[i],weight));
-
      }
+       //sum the weights 
+      double wSum = 0.0; 
+      for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) { 
+        wSum += particle->interpCellWeight[i].second;  }
+       // divide by sum: 
+      for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) { 
+        particle -> interpCellWeight[i].second = particle->interpCellWeight[i].second/wSum;  
+      }
    }
-
 }
 
 /************************************************************************************/
@@ -265,28 +271,38 @@ void Foam::foamYade::calcHydroTorque() {
 }
 /************************************************************************************/
 void Foam::foamYade::buoyancyForce(yadeParticle* particle) {
-  vector bforce(0,0,0);
+
+  vector bforce(0,0,0); double pv = 0.0;   const vector& g = gravity[0];
+
   for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i) {
-    const int& cellid  = particle -> interpCellWeight[i].first;
     const double& wt =   particle -> interpCellWeight[i].second;
-    const double& oo_cellVol = 1/(mesh.V()[cellid]*fluidDensity);
-    const vector& g = gravity[cellid];
-    vector locBforce  = g*(partDensity-fluidDensity)*wt*particle->vol;
-    bforce = bforce + locBforce;
-    uSource[cellid] = uSource[cellid] + (-1*locBforce*oo_cellVol);
+    pv += (particle->vol*wt); 
   }
-  particle -> hydroForce = particle->hydroForce+bforce;
+  bforce = (partDensity-fluidDensity)*pv*g; 
+  particle -> hydroForce += bforce; 
+
+  for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) {
+    const double& weight = particle -> interpCellWeight[i].second;
+    const int& id = particle -> interpCellWeight[i].first;
+    const double& oo_cellVol = 1./(mesh.V()[id]); 
+    uSource[id] = uSource[id] + (-bforce*weight*oo_cellVol);  
+  }
 }
 
 /************************************************************************************/
 
-void Foam::foamYade::stokesDragForce(yadeParticle* particle) {
+void Foam::foamYade::stokesDragForce(yadeParticle* particle) { 
+
+  vector dist(0,0,0); double asmall = 1e-10; 
+
   autoPtr<interpolation<vector>> interpVel = interpolation<vector>::New("cell",U);  // cellPoint does not work in parallel, why?
   const vector& uFluid = interpVel->interpolate(particle->pos,particle->inCell);
-  particle->hydroForce = 3*M_PI*(particle->dia)*(uFluid-particle->linearVelocity)*nu;
-  uSource[particle->inCell] = -particle->hydroForce*(1/(mesh.V()[particle->inCell]));
-}
+  particle->hydroForce = 3*M_PI*(particle->dia)*(uFluid-particle->linearVelocity)*nu; 
+  dist = particle ->pos - mesh.C()[particle->inCell];   
+  const double& wt = asmall + (1/mag(dist)); 
+  uSource[particle->inCell] = -particle->hydroForce*wt*(1/(mesh.V()[particle->inCell]));
 
+}
 
 /************************************************************************************/
 
@@ -320,41 +336,55 @@ void Foam::foamYade::setCellVolFraction(const std::vector<std::pair<label,double
 
 void Foam::foamYade::archimedesForce(yadeParticle* particle)
 {
-    // \vec F_a = (divT-divP)*pvol;
-    const scalar& pvol =   2*nu*M_PI*pow(particle->dia,3)/6.0;
+    // \vec F_a = (divT-divP)*pvol; 
+    vector divt(0,0,0); vector pg(0,0,0); double pv = 0.0;  
+    // get
     for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i) {
 
     const int& cellid = particle -> interpCellWeight[i].first;
-    const double& weight = particle -> interpCellWeight[i].second;
-    const double& cellvol =  mesh.V()[cellid];
+    const double& weight = particle -> interpCellWeight[i].second; 
+    pv += (particle->vol*weight); 
+    divt = divt + (2.0*nu*divT[cellid]*weight);
+    pg   =  pg + (-gradp[cellid]*weight);
+  }
+    
+  //calculate  
+    const vector& f = pv*(divt+pg);
+    particle -> hydroForce += f; 
 
-    const vector& divt  = 2.0*nu*divT[cellid]*weight;
-    const vector& pg   =  -gradp[cellid]*weight;
-    vector f = pvol*(divt+pg);
-    uSource[cellid]+= -1*f/cellvol;
-    particle -> hydroForce += f; // fluid density
+  // distribute 
+  for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) {
+    const double& weight = particle -> interpCellWeight[i].second;
+    const int& id = particle -> interpCellWeight[i].first;
+    const double& oo_cellVol = 1./(mesh.V()[id]); 
+    uSource[id] = uSource[id] + (-f*weight*oo_cellVol);  
   }
 
 }
 /************************************************************************************/
 
-void Foam::foamYade::addedMassForce(yadeParticle* particle)
-{
-  // const volVectorField& ddtU_f = fvc::ddt(U)+fvc::div(phi, U);
-  const scalar& pvol = (M_PI*std::pow(particle->dia,3))/6.0;
+void Foam::foamYade::addedMassForce(yadeParticle* particle) {
+    // const volVectorField& ddtU_f = fvc::ddt(U)+fvc::div(phi, U);
+    // get
+    vector ddtU(0,0,0); double pv = 0.0; 
+    for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i) { 
+      const double& weight = particle -> interpCellWeight[i].second; 
+      const label& cellid = particle -> interpCellWeight[i].first; 
+      pv += (particle->vol*weight); 
+      ddtU = ddtU + (ddtU_f[cellid]*weight); 
+  }    
+  //calculate  
+    const vector& f = pv*(ddtU - (particle->linearVelocity/deltaT))*partDensity; 
+    particle -> hydroForce += f; 
 
-
-  for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i) {
-    const int& cellid = particle -> interpCellWeight[i].first;
+  // distribute 
+  for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) {
     const double& weight = particle -> interpCellWeight[i].second;
-    vector am_f =  ddtU_f[cellid]*weight - (particle-> linearVelocity/deltaT );
-    am_f = am_f*(fluidDensity*pvol*0.5);
-
-     particle -> hydroForce += (fluidDensity*pvol*0.5*am_f);  // 0.5 is the added mass coeff;
-     uSource[cellid] += ((-1*particle -> hydroForce)*(1.0/ (mesh.V()[cellid]*fluidDensity)));
+    const int& id = particle -> interpCellWeight[i].first;
+    const double& oo_cellVol = 1./(mesh.V()[id]); 
+    uSource[id] = uSource[id] + (-f*weight*oo_cellVol);  
   }
 }
-
 
 /************************************************************************************/
 
@@ -387,7 +417,7 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
   const double& pw = std::pow(Re, 0.687);
   const scalar& Cd = (24/Re)*(1+(0.15*pw));
   const double& coeff = (0.75*Cd*fluidDensity*magUrelVel)*(1/particle->dia)*(std::pow(alpha_f, -2.65));
-  const vector& f = ((particle->vol))*coeff*uRelVel*alpha_f;
+  const vector& f = ((particle->vol))*coeff*uRelVel;
 
   particle-> hydroForce += f;
 
@@ -396,14 +426,14 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
   for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) {
     const double& weight = particle -> interpCellWeight[i].second;
     const int& id = particle -> interpCellWeight[i].first;
-    const scalar& value = (-coeff*weight*(1-alpha[id]));
+    const scalar& value = (-coeff*weight);
     uSourceDrag[id] = uSourceDrag[id] + (value/fluidDensity);  //implicit source (scalar)
     uSource[id] = uSource[id] + ((value*uParticle[id])/fluidDensity); // explicit source term (with averaged particle velocity);
   }
 }
 
-
 /************************************************************************************/
+
 void Foam::foamYade::combineForceToMaster(){
 
   double dummy;
@@ -469,6 +499,20 @@ void Foam::foamYade::sendHydroForceYade() {
   }
 }
 
+/************************************************************************************/ 
+//void Foam::foamYade::updateSources(std::vector<std::pair<label, double> >& pVolContrib ) {
+//
+//  for (unsigned int i=0; i != pVolContrib.size(); ++i){
+//
+//    const label& cellid  = pVolContrib[i].first;
+//    const double& pvolc = pVolContrib[i].second; 
+//    const double& alpha_p = pvolc/mesh.V()[cellid]; 
+//    uSourceDrag[cellid] = alpha_p*uSourceDrag[cellid]; 
+//    uSource[cellid] = alpha_p*uSource[cellid]; 
+//
+//  }
+//}
+//
 /************************************************************************************/
 
 
@@ -477,6 +521,9 @@ void Foam::foamYade::clearPvolContrib(std::vector<std::pair<label, double> >& pV
   pVolContrib.clear();
   uParticleContrib.clear();
 }
+
+
+/************************************************************************************/
 
 void Foam::foamYade::setParticleAction(double dt) {
 
