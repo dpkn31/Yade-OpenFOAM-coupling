@@ -312,11 +312,8 @@ void Foam::foamYade::setCellVolFraction(const std::vector<std::pair<label,double
     const double& pvolc = 1.0- (pVolContrib[i].second/mesh.V()[id]);
     alpha[id] = ((pvolc > 0) ? pvolc : 1e-08);
     const vector& upart = uParticleContrib[i].second;
-    const double& alpha_p = ((alpha[id] == 1.0) ? 1e-20 : 1-alpha[id]);
-    const double& cellvol = 1.0/(mesh.V()[id]*alpha_p);
-    uParticle[id] = cellvol*upart;
+    uParticle[id] = upart;
   }
-  //we need the vol frac to set the averaged particle velocity
 
 }
 /************************************************************************************/
@@ -389,8 +386,8 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
   const scalar& Re = small+(magUrelVel*particle->dia)/nu;
   const double& pw = std::pow(Re, 0.687);
   const scalar& Cd = (24/Re)*(1+(0.15*pw));
-  const double& coeff = (0.75*Cd*fluidDensity*magUrelVel*alpha_p*alpha_f)*(1/particle->dia)*(std::pow(alpha_f, -2.65));
-  const vector& f = ((particle->vol))*coeff*uRelVel;
+  const double& coeff = (0.75*Cd*fluidDensity*magUrelVel)*(1/particle->dia)*(std::pow(alpha_f, -2.65));
+  const vector& f = ((particle->vol))*coeff*uRelVel*alpha_f;
 
   particle-> hydroForce += f;
 
@@ -399,7 +396,7 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
   for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) {
     const double& weight = particle -> interpCellWeight[i].second;
     const int& id = particle -> interpCellWeight[i].first;
-    const scalar& value = (-coeff*weight);
+    const scalar& value = (-coeff*weight*(1-alpha[id]));
     uSourceDrag[id] = uSourceDrag[id] + (value/fluidDensity);  //implicit source (scalar)
     uSource[id] = uSource[id] + ((value*uParticle[id])/fluidDensity); // explicit source term (with averaged particle velocity);
   }
