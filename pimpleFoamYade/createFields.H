@@ -19,12 +19,12 @@ IOdictionary transportProperties
 {
   IOobject
   (
-   "transportProperties", 
-   runTime.constant(), 
-   mesh, 
-   IOobject::MUST_READ_IF_MODIFIED, 
+   "transportProperties",
+   runTime.constant(),
+   mesh,
+   IOobject::MUST_READ_IF_MODIFIED,
    IOobject::NO_WRITE )
-}; 
+};
 
 
 
@@ -58,10 +58,10 @@ volScalarField p
 );
 
 dimensionedScalar partDensity (
-    "partDensity", 
-     dimDensity, 
+    "partDensity",
+     dimDensity,
      transportProperties.lookup("partDensity")
-); 
+);
 
 
 Info<< "Reading/calculating continuous-phase face flux field phic\n"
@@ -101,10 +101,10 @@ dimensionedScalar rhocValue
 
 
 dimensionedScalar nuValue (
-   "kinematic viscosity", 
-  dimViscosity, 
+   "kinematic viscosity",
+  dimViscosity,
   transportProperties.lookup("nu")
-); 
+);
 
 volScalarField rhoc
 (
@@ -153,85 +153,85 @@ volScalarField alphac
 
 volVectorField divT(
       IOobject(
-      "divT", 
-      runTime.timeName(), 
-      mesh, 
-      IOobject::NO_READ, 
-      IOobject::NO_WRITE), 
-      fvc::laplacian(Uc) 
-); 
+      "divT",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::NO_WRITE),
+      fvc::laplacian(Uc)
+);
 
 
 
 volTensorField vGrad(
     IOobject(
-      "vGrad", 
-      runTime.timeName(), 
-      mesh, 
-      IOobject::NO_READ, 
+      "vGrad",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
       IOobject::NO_WRITE),
       fvc::grad(Uc)
-    ); 
+    );
 
 
 volVectorField gradP(
       IOobject(
-      "gradP", 
-      runTime.timeName(), 
-      mesh, 
-      IOobject::NO_READ, 
-      IOobject::AUTO_WRITE), 
-      fvc::grad(p) 
-); 
+      "gradP",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::AUTO_WRITE),
+      fvc::grad(p)
+);
 
 
 
 volScalarField uSourceDrag(
     IOobject(
-      "uSourceDrag", 
-      runTime.timeName(), 
-      mesh, 
-      IOobject::NO_READ, 
-      IOobject::NO_WRITE), 
-    mesh, 
-    dimensionedScalar("dragCoeff", dimensionSet(0,0,-1,0,0,0,0), 0 ) 
-); 
+      "uSourceDrag",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::NO_WRITE),
+    mesh,
+    dimensionedScalar("dragCoeff", dimensionSet(0,0,-1,0,0,0,0), 0 )
+);
 
 
 volVectorField uSource(
     IOobject(
-      "uSource", 
-      runTime.timeName(), 
-      mesh, 
-      IOobject::NO_READ, 
-      IOobject::NO_WRITE), 
-    mesh, 
-    dimensionedVector("volSource", dimensionSet(0,1,-2,0,0,0,0), vector(0,0,0) ) 
-); 
-
-
-
-volVectorField uRelVel(
-    IOobject(
-      "uRelVel", 
-      runTime.timeName(), 
-      mesh, 
-      IOobject::NO_READ, 
-      IOobject::NO_WRITE), 
-    mesh, 
-    dimensionedVector("relative_velocity", dimensionSet(0,1,-1,0,0,0,0), vector(0,0,0) ) 
-); 
-
-
-volVectorField ddtU_f ( 
-    IOobject (
-      "ddtU_f", 
-      runTime.timeName(), 
-      mesh, 
+      "uSource",
+      runTime.timeName(),
+      mesh,
       IOobject::NO_READ,
-      IOobject::NO_WRITE), 
+      IOobject::NO_WRITE),
+    mesh,
+    dimensionedVector("volSource", dimensionSet(0,1,-2,0,0,0,0), vector(0,0,0) )
+);
+
+
+
+volVectorField uParticle(
+    IOobject(
+      "uParticle",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::NO_WRITE),
+    mesh,
+    dimensionedVector("uParticle", dimensionSet(0,1,-1,0,0,0,0), vector(0,0,0) )
+);
+
+
+volVectorField ddtU_f (
+    IOobject (
+      "ddtU_f",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::NO_WRITE),
       fvc::ddt(Uc)+fvc::div(phic, Uc)
-); 
+);
 
 
 
