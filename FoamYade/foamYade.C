@@ -20,7 +20,7 @@ void Foam::foamYade::allocArrays(){
   haveParticle= false;
   recvdParticleData = false;
   mshTree.build_tree();
-  interp_range = 3*std::pow(mesh.V()[0], 1.0/3.0); // assuming uniform mesh, change later.
+  interp_range = 2*std::pow(mesh.V()[0], 1.0/3.0); // assuming uniform mesh, change later.
   sigma_interp = interp_range*0.42460; // interp_range/(2sqrt(2ln(2))) filter width half maximum;
   sigma_pi = 1.0/(std::pow(2*M_PI*sigma_interp*sigma_interp, 1.5));
   interp_range_cu = interp_range*interp_range*interp_range; //
@@ -57,17 +57,17 @@ void Foam::foamYade::calcInterpWeightGaussian(std::vector<yadeParticle*>& localP
        const double& ds2 = mesh.C()[particle -> cellIds[i]].y() - particle -> pos.y();
        const double& ds3 = mesh.C()[particle -> cellIds[i]].z() - particle -> pos.z();
        distsq = (ds1*ds1)+(ds2*ds2)+(ds3*ds3);
-       double weight = exp(-distsq/(2*std::pow(sigma_interp, 2)));
+       double weight = exp(-distsq/(2*std::pow(sigma_interp, 2)))*interp_range_cu*sigma_pi;
        particle -> interpCellWeight.push_back(std::make_pair(particle-> cellIds[i],weight));
      }
        //sum the weights 
-      double wSum = 0.0; 
-      for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) { 
-        wSum += particle->interpCellWeight[i].second;  }
-       // divide by sum: 
-      for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) { 
-        particle -> interpCellWeight[i].second = particle->interpCellWeight[i].second/wSum;  
-      }
+//      double wSum = 0.0; 
+//      for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) { 
+//        wSum += particle->interpCellWeight[i].second;  }
+//       // divide by sum: 
+//      for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) { 
+//        particle -> interpCellWeight[i].second = particle->interpCellWeight[i].second/wSum;  
+//      }
    }
 }
 
@@ -284,7 +284,7 @@ void Foam::foamYade::buoyancyForce(yadeParticle* particle) {
   for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) {
     const double& weight = particle -> interpCellWeight[i].second;
     const int& id = particle -> interpCellWeight[i].first;
-    const double& oo_cellVol = 1./(mesh.V()[id]); 
+    const double& oo_cellVol = 1./(mesh.V()[id]*fluidDensity); 
     uSource[id] = uSource[id] + (-bforce*weight*oo_cellVol);  
   }
 }
@@ -328,7 +328,7 @@ void Foam::foamYade::setCellVolFraction(const std::vector<std::pair<label,double
     const double& pvolc = 1.0- (pVolContrib[i].second/mesh.V()[id]);
     alpha[id] = ((pvolc > 0) ? pvolc : 1e-08);
     const vector& upart = uParticleContrib[i].second;
-    uParticle[id] = upart;
+    uParticle[id] = upart/mesh.V()[id];
   }
 
 }
@@ -530,8 +530,10 @@ void Foam::foamYade::setParticleAction(double dt) {
 
   deltaT = dt;                      // get the time step
   locateAllParticle();              // find the particles in proc.
-  buildCelltoPartList(pVolContrib, uParticleContrib); // a mapping between the particles and it's associated cell ids -> sets the contribution of the particle volume and velocity
-  setCellVolFraction(pVolContrib, uParticleContrib);  // calculate the fluid volfraction in the cells and set the particle velocity in the eulerian grid.
+ if (isGaussianInterp){ 
+    buildCelltoPartList(pVolContrib, uParticleContrib); // a mapping between the particles and it's associated cell ids -> sets the contribution of the particle volume and velocity
+    setCellVolFraction(pVolContrib, uParticleContrib);  // calculate the fluid volfraction in the cells and set the particle velocity in the eulerian grid.
+   }
   calcHydroForce();       // calculate the hydrodynamic forces
 //  calcHydroTorque();    // calculate the hydrodynamic torques.
 //  updateSources(pVolContrib); 

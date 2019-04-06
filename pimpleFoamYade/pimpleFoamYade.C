@@ -55,15 +55,22 @@ int main(int argc, char *argv[])
 
     bool gaussianInterp = true;
     foamYade yadeCoupling(mesh,Uc, uSource, uParticle, alphac, gradP,vGrad,divT,uSourceDrag,ddtU_f,g,gaussianInterp);
-    yadeCoupling.setScalarProperties(nuValue.value(), partDensity.value(), 1000);
+    yadeCoupling.setScalarProperties(nuValue.value(), partDensity.value(), rhocValue.value());
 
 
-  forAll(Uc, cellI) {
-    Uc[cellI].x() = 0.0;
-    Uc[cellI].y() = 0.0;
-    Uc[cellI].z() = 0.0;
-  }
-//
+
+//     shear flow velocity initialization    
+//    forAll(Uc, cellI) {
+//       Uc[cellI].x() = (4.0*mesh.C()[cellI].y())-2.0; 
+//    } 
+
+
+//  forAll(Uc, cellI) {
+//    Uc[cellI].x() = 0.0;
+//    Uc[cellI].y() = 0.0;
+//    Uc[cellI].z() = 0.0;
+//  }
+////
     while (runTime.run())
     {
         #include "readTimeControls.H"
