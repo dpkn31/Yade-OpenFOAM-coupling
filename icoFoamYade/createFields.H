@@ -42,44 +42,8 @@ dimensionedScalar fluidDensity(
     "fluidDensity",
     dimDensity, 
     transportProperties.lookup("fluidDensity")
-); 
-
-volVectorField uSource(
-    IOobject(
-      "uSource", 
-      runTime.timeName(), 
-      mesh, 
-      IOobject::NO_READ, 
-      IOobject::AUTO_WRITE), 
-    mesh
-); 
-
-
-
-
-volVectorField uParticle(
-    IOobject(
-      "uParticle", 
-      runTime.timeName(), 
-      mesh, 
-      IOobject::NO_READ, 
-      IOobject::AUTO_WRITE), 
-    mesh
-); 
-//
-
-volScalarField alphac
-(
-    IOobject
-    (
-        "alpha",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    mesh
 );
+
 
 
 Info<< "Reading field U\n" << endl;
@@ -96,52 +60,54 @@ volVectorField U
     mesh
 );
 
-volTensorField vGrad(
-    IOobject(
-      "vGrad", 
-      runTime.timeName(), 
-      mesh, 
-      IOobject::NO_READ, 
-      IOobject::NO_WRITE),
-      fvc::grad(U)
-    ); 
 
-
-//volVectorField gravity 
-//(
-// IOobject(
-//  "gravity", 
-//  runTime.constant(), 
-//  mesh, 
-//  IOobject::MUST_READ, 
-//  IOobject::NO_WRITE), 
-// mesh
-// ); 
-//
+volScalarField alphac
+(
+    IOobject
+    (
+      "alpha",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("0", dimless, 0)
+);
 
 
 volVectorField divT(
       IOobject(
-      "divT", 
-      runTime.timeName(), 
-      mesh, 
-      IOobject::NO_READ, 
-      IOobject::NO_WRITE), 
-      fvc::laplacian(U) 
-); 
+      "divT",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::NO_WRITE),
+      fvc::laplacian(U)
+);
 
+
+
+volTensorField vGrad(
+    IOobject(
+      "vGrad",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::NO_WRITE),
+      fvc::grad(U)
+    );
 
 
 volVectorField gradP(
       IOobject(
-      "gradP", 
-      runTime.timeName(), 
-      mesh, 
-      IOobject::NO_READ, 
-      IOobject::AUTO_WRITE), 
-      fvc::grad(p)*scalar(-1.0)
-); 
-
+      "gradP",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::AUTO_WRITE),
+      fvc::grad(p)
+);
 
 
 
@@ -154,6 +120,31 @@ volScalarField uSourceDrag(
       IOobject::NO_WRITE),
     mesh,
     dimensionedScalar("dragCoeff", dimensionSet(0,0,-1,0,0,0,0), 0 )
+);
+
+
+volVectorField uSource(
+    IOobject(
+      "uSource",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::NO_WRITE),
+    mesh,
+    dimensionedVector("volSource", dimensionSet(0,1,-2,0,0,0,0), vector(0,0,0) )
+);
+
+
+
+volVectorField uParticle(
+    IOobject(
+      "uParticle",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::NO_WRITE),
+    mesh,
+    dimensionedVector("uParticle", dimensionSet(0,1,-1,0,0,0,0), vector(0,0,0) )
 );
 
 
