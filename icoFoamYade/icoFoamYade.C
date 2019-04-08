@@ -55,10 +55,10 @@ int main(int argc, char *argv[])
     yadeCoupling.setScalarProperties(nu.value(), partDensity.value(), fluidDensity.value() );
 
 
-//     shear flow velocity initialization    
-//    forAll(U, cellI) {
-//       U[cellI].x() = (mesh.C()[cellI].y())-0.05; 
-//    } 
+ //    shear flow velocity initialization    
+    forAll(U, cellI) {
+       U[cellI].x() = (4.0*mesh.C()[cellI].y())-2.0; 
+    } 
 ////
 
 
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
         (
             fvm::ddt(U)
           + fvm::div(phi, U)
-          - fvm::laplacian(nu, U)  == fvm::Sp(uSourceDrag, U) +uSource
+          - fvm::laplacian(nu, U)  == uSource
         );
 
         if (piso.momentumPredictor())
