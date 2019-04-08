@@ -309,9 +309,9 @@ void Foam::foamYade::stokesDragForce(yadeParticle* particle) {
   
   particle->hydroForce = coeff*(uFluid-particle->linearVelocity);  
 
-//   uSourceDrag[particle -> inCell] += (-1*coeff*oo_cellVol*wt); 
-//   vector up(particle-> linearVelocity*wt); 
-  uSource[particle->inCell] +=  (-1*wt*oo_cellVol*particle->hydroForce);
+   uSourceDrag[particle -> inCell] += (-1*coeff*oo_cellVol*wt); 
+  vector up(particle-> linearVelocity*wt); 
+  uSource[particle->inCell] +=  (-1*wt*oo_cellVol*up*coeff);
 
 }
 
@@ -467,11 +467,13 @@ void Foam::foamYade::setSourceZero() {
     uSource[cellI].y()=1e-15;
     uSource[cellI].z()=1e-15;
     alpha[cellI] = 1.0;
+    uSourceDrag[cellI] = 1e-15; 
+    if (isGaussianInterp){
+    clearPvolContrib(pVolContrib, uParticleContrib);  
     uParticle[cellI].x() = 1e-15;
     uParticle[cellI].y() = 1e-15;
     uParticle[cellI].z() = 1e-15;
-    uSourceDrag[cellI] = 1e-15;
-    clearPvolContrib(pVolContrib, uParticleContrib);
+    }
   }
 }
 /************************************************************************************/
