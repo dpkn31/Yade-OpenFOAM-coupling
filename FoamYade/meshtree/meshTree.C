@@ -6,20 +6,15 @@
 
 #include "meshTree.H"
 
-
 void Foam::meshTree::build_tree() 
 {
-
   std::vector<meshpt>  ptlist; 
   // label cellI;  
   forAll(meshm, cellI)
     ptlist.push_back(meshpt(&meshm[cellI].x(), &meshm[cellI].y(), &meshm[cellI].z(), cellI));
   numlevels =0; 
   root = recursive_build_tree(ptlist, 0);
-   
-
 }
-
 
 kdNode* Foam::meshTree::recursive_build_tree(std::vector<meshpt>& ptlist, int depth) 
 {
@@ -27,22 +22,18 @@ kdNode* Foam::meshTree::recursive_build_tree(std::vector<meshpt>& ptlist, int de
   if (! ptlist.size()){return NULL; } 
   numlevels = numlevels+1; 
   int axis = depth%ndim; 
-
  
   get_median(ptlist, axis);
   vec_sz md = ptlist.size()/2;  
   kdNode* node = new kdNode(ptlist[md]);
-
+  
   std::vector<meshpt> pv1 = std::vector<meshpt>(ptlist.begin(), ptlist.begin()+md); 
   std::vector<meshpt> pv2 = std::vector<meshpt>(ptlist.begin()+md+1, ptlist.end()); 
-
 
   node->left = recursive_build_tree(pv1, depth+1);
   node->right = recursive_build_tree(pv2, depth+1);  
 
   return node;  
-
-
 }
 
 void Foam::meshTree::traversTree()
@@ -57,7 +48,6 @@ void Foam::meshTree::get_median(std::vector<meshpt>& ptlist, const int& axis)
 //  std::sort(ptlist.begin(), ptlist.end(), cmpvec(axis)); too slow 
  vec_sz md = ptlist.size()/2;   
   std::nth_element(ptlist.begin(), ptlist.begin()+md, ptlist.end(), cmpvec(axis)); 
-
 }
 
 
@@ -91,7 +81,6 @@ int Foam::meshTree::nearestCell(const vector& p)
 kdNode* Foam::meshTree::recursive_nearest_cell(kdNode* node, const meshpt& v, kdNode* best, double& best_dist,int depth)
 {
 
- 
   if (node ==NULL) return NULL;  
   kdNode* best1=best;  
   double dist_l = best_dist; 
@@ -113,7 +102,6 @@ kdNode* Foam::meshTree::recursive_nearest_cell(kdNode* node, const meshpt& v, kd
    kdNode* next; 
    kdNode* other; 
 
-
    if (df > 0.0){
      next = node->left; 
      other =node->right;
@@ -132,7 +120,6 @@ kdNode* Foam::meshTree::recursive_nearest_cell(kdNode* node, const meshpt& v, kd
   }
 }
 
-  
   if(df2 < dist_l ){  
     kdNode* nextN = recursive_nearest_cell(other, v,best1, dist_l, depth); 
   if (nextN != NULL){
@@ -145,7 +132,6 @@ kdNode* Foam::meshTree::recursive_nearest_cell(kdNode* node, const meshpt& v, kd
 
 }
 return best1;
-
 }
 
 
@@ -154,9 +140,7 @@ void Foam::meshTree::_traversTree(kdNode* node)
  
   if(node==NULL){return; }
   _traversTree(node->left); 
-
   _traversTree(node ->right);   
-
 
 }
 
@@ -187,7 +171,6 @@ std::vector<int> Foam::meshTree::nnearestCellsRange(const vector& v, const doubl
 //      delete pq -> container[i].first; 
 //  }
 
-
   pq.container.clear(); 
 // delete pq;
 //   delete bestnode; 
@@ -217,10 +200,8 @@ kdNode* Foam::meshTree::nnearest(kdNode* node, const meshpt& v, kdNode* best, do
    double df = *(node ->p.pt[axis])-*(v.pt[axis]);
    double df2 = df*df; 
    
-
    kdNode* next; 
    kdNode* other; 
-
 
    if (df > 0.0){
      next = node->left; 
@@ -229,7 +210,6 @@ kdNode* Foam::meshTree::nnearest(kdNode* node, const meshpt& v, kdNode* best, do
      next = node-> right; 
      other = node-> left;
    }
-  
   depth = depth+1;
   kdNode* nextN  = nnearest(next, v, best1, dist_l, depth, pq); 
   if (nextN != NULL){
@@ -238,14 +218,10 @@ kdNode* Foam::meshTree::nnearest(kdNode* node, const meshpt& v, kdNode* best, do
       dist_l = distsq;
       best1 = nextN;
       if (dist_l < pq.maxdist) 
-        pq.push_node(std::make_pair(best1, dist_l)); 
-
-     
-
+        pq.push_node(std::make_pair(best1, dist_l));      
   }
 }
 
-  
   if(df2 < dist_l ){  
     kdNode* nextN = nnearest(other, v,best1, dist_l, depth, pq); 
   if (nextN != NULL){
@@ -257,12 +233,6 @@ kdNode* Foam::meshTree::nnearest(kdNode* node, const meshpt& v, kdNode* best, do
         pq.push_node(std::make_pair(best1, dist_l)); 
     }
   }
-
 }
-
 return best1; 
-
 }
-
-
-
