@@ -57,9 +57,9 @@ int main(int argc, char *argv[])
 
 //     shear flow velocity initialization    
 //    forAll(U, cellI) {
-//       U[cellI].x() = (4.0*mesh.C()[cellI].y())-2.0; 
+//       U[cellI].x() = (mesh.C()[cellI].y())-0.05; 
 //    } 
-//
+////
 
 
     while (runTime.loop())
@@ -80,12 +80,12 @@ int main(int argc, char *argv[])
         (
             fvm::ddt(U)
           + fvm::div(phi, U)
-          - fvm::laplacian(nu, U)  
+          - fvm::laplacian(nu, U)  == fvm::Sp(uSourceDrag, U) +uSource
         );
 
         if (piso.momentumPredictor())
         {
-            solve(UEqn == -fvc::grad(p)+uSource);
+            solve(UEqn == -fvc::grad(p));
         }
 
         // --- PISO loop
