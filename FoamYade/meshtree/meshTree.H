@@ -11,12 +11,9 @@
 #include <algorithm> 
 #include "fvCFD.H"
 
-
 namespace Foam {
-
-
-   class meshpt {
-     
+   
+   class meshpt {  
      public:
        meshpt(const double* x, const double* y, const double* z, int cid){
        pt.push_back(x); pt.push_back(y);  pt.push_back(z); id = cid;  } 
@@ -25,9 +22,6 @@ namespace Foam {
       virtual ~meshpt(){}; 
    }; 
    
-   
-   
-   
    class kdNode {
      
      public:  
@@ -35,11 +29,8 @@ namespace Foam {
        meshpt p; 
        kdNode* left; 
        kdNode* right;
-   
        virtual ~kdNode(){};
    }; 
-   
-   
    
    class cmpnode{
    
@@ -51,8 +42,6 @@ namespace Foam {
        }
    }; 
    
-   
-   
    class cmpvec{
    
      public: 
@@ -60,13 +49,10 @@ namespace Foam {
    
        bool operator () (const meshpt& p1, const meshpt& p2)
        {
-         return *(p1.pt[a]) < *(p2.pt[a]); 
-   
+         return *(p1.pt[a]) < *(p2.pt[a]);
        }
-   
        int a; 
    }; 
-   
    
    
    class pqueue{
@@ -106,9 +92,7 @@ namespace Foam {
        virtual ~pqueue(){}; 
    }; 
    
-   
-   
-   
+     
    class meshTree { 
 
      public:
@@ -131,13 +115,7 @@ namespace Foam {
      void traversTree(); 
      void _traversTree(kdNode*); 
       
-   
     }; 
-   
-
-
 }
-
-
 
 #endif
