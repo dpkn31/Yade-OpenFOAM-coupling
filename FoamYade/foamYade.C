@@ -293,14 +293,25 @@ void Foam::foamYade::buoyancyForce(yadeParticle* particle) {
 
 void Foam::foamYade::stokesDragForce(yadeParticle* particle) { 
 
-  vector dist(0,0,0); double asmall = 1e-10; 
+  vector dist(0,0,0); double asmall = 1e-08; 
 
-  autoPtr<interpolation<vector>> interpVel = interpolation<vector>::New("cell",U);  // cellPoint does not work in parallel, why?
-  const vector& uFluid = interpVel->interpolate(particle->pos,particle->inCell);
-  particle->hydroForce = 3*M_PI*(particle->dia)*(uFluid-particle->linearVelocity)*nu; 
-  dist = particle ->pos - mesh.C()[particle->inCell];   
-  const double& wt = asmall + (1/mag(dist)); 
-  uSource[particle->inCell] = -particle->hydroForce*wt*(1/(mesh.V()[particle->inCell]));
+//   autoPtr<interpolation<vector>> interpVel = interpolation<vector>::New("cell",U);  // cellPoint does not work in parallel, why?
+//   const vector& uFluid = interpVel->interpolate(particle->pos,particle->inCell);  
+ 
+  const double& coeff  = 3*M_PI*(particle->dia)*nu*fluidDensity; 
+  const double&  oo_cellVol = 1./(mesh.V()[particle-> inCell]*fluidDensity); 
+  dist = particle ->pos - mesh.C()[particle->inCell]; 
+  const double& el = std::pow(mesh.V()[particle->inCell], 1.0/3.0);  
+  const double& xdist = mag(dist)+asmall;  
+  const double& wt =  1.0-(xdist/el);  
+
+  const vector& uFluid = wt*U[particle->inCell];  
+  
+  particle->hydroForce = coeff*(uFluid-particle->linearVelocity);  
+
+  uSourceDrag[particle -> inCell] += (-1*coeff*oo_cellVol*wt); 
+  vector up(particle-> linearVelocity*wt); 
+  uSource[particle->inCell] +=  (-1*coeff*wt*oo_cellVol*up);
 
 }
 
