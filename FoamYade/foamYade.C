@@ -309,9 +309,9 @@ void Foam::foamYade::stokesDragForce(yadeParticle* particle) {
   
   particle->hydroForce = coeff*(uFluid-particle->linearVelocity);  
 
-  uSourceDrag[particle -> inCell] += (-1*coeff*oo_cellVol*wt); 
-  vector up(particle-> linearVelocity*wt); 
-  uSource[particle->inCell] +=  (-1*coeff*wt*oo_cellVol*up);
+//   uSourceDrag[particle -> inCell] += (-1*coeff*oo_cellVol*wt); 
+//   vector up(particle-> linearVelocity*wt); 
+  uSource[particle->inCell] +=  (-1*wt*oo_cellVol*particle->hydroForce);
 
 }
 
