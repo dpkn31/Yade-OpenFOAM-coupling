@@ -9,3 +9,6 @@ cd ../
 cd icoFoamYade/
 wmake 
 cd ../
+cd pimpleFoamYade/
+wmake 
+cd ../
