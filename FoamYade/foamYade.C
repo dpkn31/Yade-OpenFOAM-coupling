@@ -239,7 +239,8 @@ void Foam::foamYade::calcHydroForce(){
       hydroDragForce(particle);
       buoyancyForce(particle);
     }
-      else {
+      else { 
+        particle -> hydroForce = vector(0,0,0); 
         stokesDragForce(particle);
       }
    }
@@ -295,23 +296,20 @@ void Foam::foamYade::stokesDragForce(yadeParticle* particle) {
 
   vector dist(0,0,0); double asmall = 1e-08; 
 
-//   autoPtr<interpolation<vector>> interpVel = interpolation<vector>::New("cell",U);  // cellPoint does not work in parallel, why?
-//   const vector& uFluid = interpVel->interpolate(particle->pos,particle->inCell);  
+  autoPtr<interpolation<vector>> interpVel = interpolation<vector>::New("cell",U);  // cellPoint does not work in parallel, why?
+  const vector& uFluid = interpVel->interpolate(particle->pos,particle->inCell);  
+  const vector& uf2 = U[particle -> inCell]; 
+  const double &wt = mag(uFluid)/mag(uf2); 
  
   const double& coeff  = 3*M_PI*(particle->dia)*nu*fluidDensity; 
   const double&  oo_cellVol = 1./(mesh.V()[particle-> inCell]*fluidDensity); 
   dist = particle ->pos - mesh.C()[particle->inCell]; 
-  const double& el = std::pow(mesh.V()[particle->inCell], 1.0/3.0);  
-  const double& xdist = mag(dist)+asmall;  
-  const double& wt =  1.0-(xdist/el);  
-
-  const vector& uFluid = wt*U[particle->inCell];  
   
   particle->hydroForce = coeff*(uFluid-particle->linearVelocity);  
 
-   uSourceDrag[particle -> inCell] += (-1*coeff*oo_cellVol*wt); 
-  vector up(particle-> linearVelocity*wt); 
-  uSource[particle->inCell] +=  (-1*wt*oo_cellVol*up*coeff);
+//    uSourceDrag[particle -> inCell] += (-1*coeff*oo_cellVol*wt); 
+//   vector up(particle-> linearVelocity*wt); 
+  uSource[particle->inCell] +=  (-1*wt*oo_cellVol*particle->hydroForce);
 
 }
 
@@ -466,13 +464,14 @@ void Foam::foamYade::setSourceZero() {
     uSource[cellI].x()=1e-15;
     uSource[cellI].y()=1e-15;
     uSource[cellI].z()=1e-15;
-    alpha[cellI] = 1.0;
-    uSourceDrag[cellI] = 1e-15; 
     if (isGaussianInterp){
-    clearPvolContrib(pVolContrib, uParticleContrib);  
-    uParticle[cellI].x() = 1e-15;
-    uParticle[cellI].y() = 1e-15;
-    uParticle[cellI].z() = 1e-15;
+        clearPvolContrib(pVolContrib, uParticleContrib);
+        alpha[cellI] = 1.0;
+        uSourceDrag[cellI] = 1e-15; 
+        uParticle[cellI].x() = 1e-15;
+        uParticle[cellI].y() = 1e-15;
+        uParticle[cellI].z() = 1e-15;
+
     }
   }
 }
@@ -481,7 +480,7 @@ void Foam::foamYade::exchangeTimeStep() {
   if (comm.rank==1) {
     comm.sendOneDouble(yadeProc, deltaT);
   }
-  double yadeDt =  1e-20;
+  double yadeDt; 
   comm.cast_one_double(yadeProc, yadeDt);
 
 }
@@ -549,7 +548,6 @@ void Foam::foamYade::setParticleAction(double dt) {
    }
   calcHydroForce();       // calculate the hydrodynamic forces
 //  calcHydroTorque();    // calculate the hydrodynamic torques.
-//  updateSources(pVolContrib); 
   sendHydroForceYade();   // send info to yade
   exchangeTimeStep();     // exchange timesteps between yade and openfoam
 
