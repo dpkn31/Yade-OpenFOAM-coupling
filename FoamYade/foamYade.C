@@ -234,8 +234,8 @@ void Foam::foamYade::calcHydroForce(){
 
   for (std::vector<yadeParticle*>::iterator pIter = localParticle.begin();  pIter != localParticle.end(); pIter++) {
     yadeParticle* particle = *pIter;
+    initParticleForce(particle);
     if(isGaussianInterp){
-      initParticleForce(particle);
       hydroDragForce(particle);
       buoyancyForce(particle);
     }
@@ -254,20 +254,20 @@ void Foam::foamYade::calcHydroTorque() {
       yadeParticle* particle = *pIter;
 
      if (isGaussianInterp){
+       scalar s1 = 0.0; scalar s2 = 0.0; scalar s3 =0.0; 
 
      for (unsigned int i=0; i!= particle -> interpCellWeight.size(); ++i)
      {
        const int& cellid = particle -> interpCellWeight[i].first;
        const double& weight = particle -> interpCellWeight[i].second;
-       const scalar& s1 = (vGrad[cellid].yz() - vGrad[cellid].zy())*weight;
-       const scalar& s2 = (vGrad[cellid].zx() - vGrad[cellid].xz())*weight;
-       const scalar& s3 = (vGrad[cellid].xy() - vGrad[cellid].yx())*weight;
+        s1 += ((vGrad[cellid].yz() - vGrad[cellid].zy())*weight);
+        s2 += ((vGrad[cellid].zx() - vGrad[cellid].xz())*weight);
+        s3 += ((vGrad[cellid].xy() - vGrad[cellid].yx())*weight); }
+
        const vector wfluid(s1,s2,s3);
        particle -> hydroTorque += M_PI*(pow(particle -> dia, 3))*(wfluid - particle-> rotationalVelocity)*nu*fluidDensity;
 
-     }
-
-    } else {stokesDragTorque(particle);  }
+     } else {stokesDragTorque(particle);  }
   }
 }
 /************************************************************************************/
@@ -536,7 +536,7 @@ void Foam::foamYade::setParticleAction(double dt) {
     setCellVolFraction(pVolContrib, uParticleContrib);  // calculate the fluid volfraction in the cells and set the particle velocity in the eulerian grid.
    }
   calcHydroForce();       // calculate the hydrodynamic forces
-//  calcHydroTorque();    // calculate the hydrodynamic torques.
+  calcHydroTorque();    // calculate the hydrodynamic torques.
   sendHydroForceYade();   // send info to yade
   exchangeTimeStep();     // exchange timesteps between yade and openfoam
 
