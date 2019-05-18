@@ -55,10 +55,10 @@ int main(int argc, char *argv[])
     yadeCoupling.setScalarProperties(nu.value(), partDensity.value(), fluidDensity.value() );
 
 
- //    shear flow velocity initialization    (Remember to re-comment these lines after testing. and compile.)
-//    forAll(U, cellI) {
-//       U[cellI].x() = (1.0*mesh.C()[cellI].y()) - 0.05; 
-//    } 
+//    shear flow velocity initialization    (Remember to re-comment these lines after testing. and compile.)
+    forAll(U, cellI) {
+       U[cellI].x() = (1.0*mesh.C()[cellI].y()) - 0.05; 
+    } 
 
 
 
