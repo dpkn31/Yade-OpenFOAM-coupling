@@ -3,7 +3,8 @@ An OpenFOAM solver for realizing CFD-DEM simulations with the Open Source Discre
  * Fast mesh search based on k-d Tree algorithm, faster than the original Octree search offered by OpenFOAM (mesh.findCell,  mesh.findNearest).
  * Gaussian interpolation of field variables. 
  * Simple point-force coupling (icoFoamYade) solver
- * Full 4-way coupling (pimpleFoamYade) solver. (under validation) 
+ * Full 4-way coupling (pimpleFoamYade) solver.
+ * Documentation : https://yade-dem.org/doc/FoamCoupling.html
 
 
 ![Alt text](ccpl1.png)
