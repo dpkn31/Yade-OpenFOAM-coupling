@@ -5,6 +5,7 @@ An OpenFOAM solver for realizing CFD-DEM simulations with the Open Source Discre
  * Simple point-force coupling (icoFoamYade) solver
  * Full 4-way coupling (pimpleFoamYade) solver.
  * Documentation : https://yade-dem.org/doc/FoamCoupling.html
+ * Examples : https://gitlab.com/yade-dev/trunk/tree/master/examples/openfoam
 
 
 ![Alt text](ccpl1.png)
