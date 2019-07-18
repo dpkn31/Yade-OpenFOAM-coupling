@@ -543,3 +543,8 @@ void Foam::foamYade::setParticleAction(double dt) {
 }
 
 /************************************************************************************/
+
+
+void Foam::foamYade::recvTerminate(){
+     comm.castTerminate();  
+}

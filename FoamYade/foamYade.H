@@ -134,6 +134,7 @@ namespace Foam
                               std::vector<std::pair <label,vector> >& ); 
 
         void updateSources(std::vector<std::pair<label, double> >& ); 
+        void recvTerminate();  
         ~foamYade(){};
 
   };
