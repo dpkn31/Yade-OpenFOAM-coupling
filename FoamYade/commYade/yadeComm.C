@@ -60,9 +60,23 @@ void Foam::yadeComm::procReduceSumDouble(double& sendValue, double& recValue){
 } 
 
 
+void Foam::yadeComm::sendTerminate(){ 
+  int terminate = 1; 
+  //MPI_Bcast(&terminate,1,MPI_INT, 0, MPI_COMM_WORLD); 
+  MPI_Send(&terminate,1,MPI_INT,1,999, MPI_COMM_WORLD); 
+}
 
 
+void Foam::yadeComm::recvTerminate(){ 
+    int buff; 
+    MPI_Recv(&buff,1,MPI_INT,0,999, MPI_COMM_WORLD,&status); 
 
+}
+
+void Foam::yadeComm::castTerminate() {
+  int terminate = 1; 
+  MPI_Bcast(&terminate, 1, MPI_INT, 0, MPI_COMM_WORLD); 
+}
 
 
 

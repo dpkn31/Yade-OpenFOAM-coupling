@@ -25,6 +25,9 @@ namespace Foam
       void procReduceMaxInt(int&, int&);
       void procReduceSumDouble(double&, double&); 
       void cast_one_double(int, double&);  
+      void sendTerminate(); 
+      void recvTerminate();
+      void castTerminate();    
       ~yadeComm(){}; 
   }; 
 }
