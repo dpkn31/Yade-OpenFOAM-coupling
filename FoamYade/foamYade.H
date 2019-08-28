@@ -55,7 +55,8 @@ namespace Foam
        std::vector< std::pair <label, double> > pVolContrib;
        std::vector< std::pair <label, vector> > uParticleContrib;
        bool haveParticle;
-       void allocArrays();
+       void initAllocArrays();
+       void allocArrays(int); 
        const int yadeProc = 0;
        const fvMesh& mesh;
        const volVectorField& U;
@@ -102,7 +103,7 @@ namespace Foam
                       vGrad(gradv), divT(divergencestress),
                       uSourceDrag(dragcoeff), ddtU_f(ddtuf),
                       gravity(gravityf), mshTree(mesh.C())
-                      {allocArrays(); isGaussianInterp=gaussianinterp;  };
+                      {initAllocArrays(); isGaussianInterp=gaussianinterp;  };
         void setScalarProperties(scalar, scalar, scalar);
         void locateAllParticle();
         bool locateParticle(yadeParticle* );
