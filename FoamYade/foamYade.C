@@ -9,7 +9,7 @@
 
 /************************************************************************************/
 
-void Foam::foamYade::allocArrays(){
+void Foam::foamYade::initAllocArrays(){
 
   comm.cast_integer_data(yadeProc, numParticles);
   hydroForce.reserve(numParticles*6);
@@ -36,6 +36,25 @@ void Foam::foamYade::allocArrays(){
     uParticle[cellI].z() = 1e-15; //  no std::fill
   }
 }
+
+/************************************************************************************/
+
+
+ void Foam::foamYade::allocArrays(int sz){
+    hydroForce.resize(sz*6);
+    particleData.resize(sz*6); 
+    particleInProc.resize(sz*6); 
+    forAll(uSource, cellI){
+    uSource[cellI].x() = 1e-15;
+    uSource[cellI].y() = 1e-15;
+    uSource[cellI].z() = 1e-15;
+    uSourceDrag[cellI] = 1e-15;
+    uParticle[cellI].x() = 1e-15;
+    uParticle[cellI].y() = 1e-15;
+    uParticle[cellI].z() = 1e-15; //  no std::fill
+  }
+}
+
 
 /************************************************************************************/
 
@@ -149,8 +168,13 @@ void Foam::foamYade::resetLocalParticleList(std::vector<yadeParticle*>& localPar
 
 void Foam::foamYade::locateAllParticle()
 {
-
+       MPI_Bcast(&numParticles, 1, MPI_INT, 0, MPI_COMM_WORLD);    
+       allocArrays(numParticles);  
+       
        comm.cast_double_array_data(yadeProc, particleData);
+       
+       
+       
        for (int i=0; i != numParticles; ++i)
        {
 
@@ -219,6 +243,7 @@ void Foam::foamYade::sendHydroForcePoint() {
       }
     }
   }
+  
   resetLocalParticleList(localParticle);
 }
 /************************************************************************************/
@@ -468,6 +493,7 @@ void Foam::foamYade::setSourceZero() {
 void Foam::foamYade::exchangeTimeStep() {
   if (comm.rank==1) {
     comm.sendOneDouble(yadeProc, deltaT);
+    
   }
   double yadeDt;
   comm.cast_one_double(yadeProc, yadeDt);
