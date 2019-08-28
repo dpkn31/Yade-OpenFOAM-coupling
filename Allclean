@@ -1,4 +1,6 @@
-cd FoamYade/commYade/
+cd FoamYade/
+wclean
+cd commYade/
 wclean
 cd ../ 
 cd meshtree/
