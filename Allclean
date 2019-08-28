@@ -1,4 +1,6 @@
-cd FoamYade/commYade/
+cd FoamYade/ 
+wclean 
+cd commYade/
 wclean
 cd ../ 
 cd meshtree/
@@ -8,4 +10,7 @@ wclean
 cd ../
 cd icoFoamYade/
 wclean
+cd ../
+cd pimpleFoamYade/ 
+wclean 
 cd ../
