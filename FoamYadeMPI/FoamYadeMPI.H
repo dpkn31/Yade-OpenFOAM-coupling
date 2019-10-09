@@ -1,14 +1,15 @@
 #ifndef FoamYadeMPI_H 
 #define FoamYadeMPI_H 
 
-#include "fvCFD.H" 
-#include "meshTree.H" 
-#include "interpolation.H" 
-#include "interpolationCell.H" 
 #include <vector> 
 #include <memory> 
 #include <algorithm> 
 #include <functional> 
+
+#include "fvCFD.H" 
+#include "meshTree.H" 
+#include "interpolation.H" 
+#include "interpolationCell.H" 
 
 namespace Foam {
   
@@ -23,7 +24,7 @@ namespace Foam {
 			vector ori; 
 			vector rotationalVelocity; 
 			vector hydroForce; 
-			vector hydroTroque; 
+			vector hydroTorque; 
 			std::vector<int> cellIds; 
 			std::vector<std::pair<int, double> > interpCellWeight; 
 			int inProc; 
@@ -93,7 +94,7 @@ namespace Foam {
 			std::vector<std::shared_ptr<YadeProc> > inCommProcs; 
 			bool fibreCpl;  // flag for fiber coupling. 
 			double hydorTimeScale; 
-			double sigma
+			double sigma; 
 			
 			FoamYadeMPI(const fvMesh& _mesh, 
 				    const volVectorField& _U, 
@@ -121,7 +122,7 @@ namespace Foam {
 			void sendMeshBbox(); 
 			void recvYadeIntrs(); 
 			void locateAllParticles(); 
-			void locatePt(const std::shared_ptr<YadeParticle>& ); 
+			bool locatePt(const std::shared_ptr<YadeParticle>& ); 
 			void buildCellPartList(std::shared_ptr<YadeProc>& ); 
 			void calcInterpWeightGaussian(std::vector<std::shared_ptr<YadeParticle> >& ); 
 			void setCellVolFraction(std::shared_ptr<YadeProc>& ); 
@@ -129,13 +130,14 @@ namespace Foam {
 			void sendHydroForceYadeMPI(); 
 			void runCpl(); 
 			void exchangeDT();
-			void sendHydroTimeScale(); 
+			void sendHydroTimeScale(std::shared_ptr<YadeProc>& ); 
 			void setParticleAction(const double& ); 
 			void terminateRun(); 
 			void initParticleForce(std::shared_ptr<YadeParticle>& ); 
+			void clearInCommProcs(); 
 			//forces
 			void calcHydroForce(std::shared_ptr<YadeProc>& ); 
-			void calcHydroTorque(std::shared_ptr<YadeParticle>& ); 
+			void calcHydroTorque(std::shared_ptr<YadeProc>& ); 
 			// vol averaged 
 			void hydroDragForce(std::shared_ptr<YadeParticle>& );
 			void buoyancyForce(std::shared_ptr<YadeParticle>& ); 
