@@ -112,8 +112,8 @@ namespace Foam {
 				    scalar _nu, 
 				    bool gaussianInterp) : 
 				    mesh(_mesh), U(_U), gradP(_gradP), 
-				    vGrad(_vGrad), divT(_divT), uSourceDrag(_uSourceDrag), 
-				    ddtU(_ddtU), g(_g),  alpha(_alpha), 
+				    vGrad(_vGrad), divT(_divT), ddtU(_ddtU), 
+				    g(_g), uSourceDrag(_uSourceDrag),  alpha(_alpha), 
 				    uSource(_uSource), uParticle(_uParticle), mshTree(mesh.C())
 				    {isGaussianInterp = gaussianInterp; getRankSize(); setScalarProperties(_rhoP, _rhoF, _nu); }
 			
@@ -128,10 +128,9 @@ namespace Foam {
 			void setCellVolFraction(std::shared_ptr<YadeProc>& ); 
 			void updateSources(std::shared_ptr<YadeProc>& ); 
 			void sendHydroForceYadeMPI(); 
-			void runCpl(); 
 			void exchangeDT();
 			void sendHydroTimeScale(std::shared_ptr<YadeProc>& ); 
-			void setParticleAction(const double& ); 
+			void setParticleAction(double ); 
 			void terminateRun(); 
 			void initParticleForce(std::shared_ptr<YadeParticle>& ); 
 			void clearInCommProcs(); 
