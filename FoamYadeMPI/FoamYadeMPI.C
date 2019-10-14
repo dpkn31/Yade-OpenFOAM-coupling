@@ -362,9 +362,10 @@ void Foam::FoamYadeMPI::calcHydroTorque(std::shared_ptr<YadeProc>& yProc){
 			for (unsigned i =0; i != prt->interpCellWeight.size(); ++i) {
 				const int& cellId = prt->interpCellWeight[i].first; 
 				const double& wt = prt->interpCellWeight[i].second; 
-				s1 += (vGrad[cellId].yz() - vGrad[cellId].zy()); 
-				s2 += (vGrad[cellId].zx() - vGrad[cellId].xz());
-				s3 += (vGrad[cellId].yx() - vGrad[cellId].xy());
+				s1 += ((vGrad[cellId].yz() - vGrad[cellId].zy())*wt); 
+				s2 += ((vGrad[cellId].zx() - vGrad[cellId].xz())*wt);
+				s3 += ((vGrad[cellId].yx() - vGrad[cellId].xy())*wt);
+				//s3 += (vGrad[cellId].yx() - vGrad[cellId].xy());
 			}
 			const vector wfluid(s1,s2,s3); 
 			prt->hydroTorque += M_PI*(pow(prt->dia, 3))*(wfluid-prt->rotationalVelocity)*nu*rhoF; 
@@ -398,13 +399,6 @@ void Foam::FoamYadeMPI::sendHydroForceYadeMPI(){
 	
 }
 
-
-void Foam::FoamYadeMPI::runCpl() {
-	if (!rankSizeSet) {getRankSize();}
-	sendHydroForceYadeMPI(); 
-	exchangeDT(); 
-	
-}
 
 
 void Foam::FoamYadeMPI::clearInCommProcs(){
@@ -442,12 +436,30 @@ void Foam::FoamYadeMPI::exchangeDT(){
 }
 
 /*main driver*/ 
-void Foam::FoamYadeMPI::setParticleAction(const double& dt) {
-// 	deltaT = dt; 
-// 	locateAllParticles(); 
-// 	if (isGaussianInterp) {}
-// 	calcHydroForce(); 
-// 	calcHydroTorque(); 
-// 	sendHydroFroceYadeMPI(); 
-// 	exchangeDT(); 
+void Foam::FoamYadeMPI::setParticleAction(double dt) {
+	
+	deltaT = dt; 
+	if (!rankSizeSet) {getRankSize(); sendMeshBbox();}
+	recvYadeIntrs(); 
+	locateAllParticles();
+	
+	if (isGaussianInterp){
+		for (auto yProc : inCommProcs){
+			buildCellPartList(yProc);
+			setCellVolFraction(yProc);
+			calcHydroForce(yProc);
+			calcHydroTorque(yProc); 
+			updateSources(yProc); 
+			
+		}
+	} else {
+		for (auto yProc : inCommProcs){
+			calcHydroForce(yProc);
+			calcHydroTorque(yProc);
+		}
+	}
+	
+	sendHydroForceYadeMPI(); 
+	clearInCommProcs(); 
+	exchangeDT(); 
 }
