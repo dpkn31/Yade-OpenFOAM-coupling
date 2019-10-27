@@ -35,7 +35,7 @@ Description
 #include "singlePhaseTransportModel.H"
 #include "PhaseIncompressibleTurbulenceModel.H"
 #include "pimpleControl.H"
-#include "foamYade.H"
+#include "FoamYadeMPI.H"
 
 int main(int argc, char *argv[])
 {
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
 
     bool gaussianInterp = true;
-    foamYade yadeCoupling(mesh,Uc, uSource, uParticle, alphac, gradP,vGrad,divT,uSourceDrag,ddtU_f,g,gaussianInterp);
+    FoamYadeMPI yadeCoupling(mesh,Uc, gradP, vGrad, divT,ddtU_f,g,uSourceDrag,alphac,uSource,uParticle,gaussianInterp);
     yadeCoupling.setScalarProperties(nuValue.value(), partDensity.value(), rhocValue.value());
 
 
@@ -128,7 +128,6 @@ int main(int argc, char *argv[])
 
     Info<< "End\n" << endl;
 
-    yadeCoupling.recvTerminate(); 
     return 0;
 }
 
