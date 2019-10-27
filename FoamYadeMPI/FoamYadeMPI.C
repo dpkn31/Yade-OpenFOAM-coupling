@@ -435,6 +435,31 @@ void Foam::FoamYadeMPI::exchangeDT(){
 	MPI_Bcast(&yadeDT,1, MPI_DOUBLE, 0, PstreamGlobals::MPI_COMM_FOAM); 
 }
 
+
+void Foam::FoamYadeMPI::setSourceZero(){
+	if(!inCommProcs.size()){return; }
+	for (auto yProc : inCommProcs){
+		for (auto& pt : yProc->pVolContrib){
+			const auto& cellid = pt.first; 
+			uSource[cellid].x() = 1e-16; 
+			uSource[cellid].y() = 1e-16; 
+			uSource[cellid].z() = 1e-16; 
+			if (isGaussianInterp){
+				alpha[cellid] = 0.0; 
+				uSourceDrag[cellid] = 1e-15; 
+				uParticle[cellid].x() = 0.0; 
+				uParticle[cellid].y() = 0.0; 
+				uParticle[cellid].z() = 0.0; 
+			}
+			
+		}
+		yProc->pVolContrib.clear(); 
+		yProc->uParticleContrib.clear(); 
+	}
+	clearInCommProcs();
+}
+
+
 /*main driver*/ 
 void Foam::FoamYadeMPI::setParticleAction(double dt) {
 	
@@ -444,6 +469,7 @@ void Foam::FoamYadeMPI::setParticleAction(double dt) {
 	locateAllParticles();
 	
 	if (isGaussianInterp){
+		if (!inCommProcs.size()){return; }
 		for (auto yProc : inCommProcs){
 			buildCellPartList(yProc);
 			setCellVolFraction(yProc);
@@ -460,6 +486,5 @@ void Foam::FoamYadeMPI::setParticleAction(double dt) {
 	}
 	
 	sendHydroForceYadeMPI(); 
-	clearInCommProcs(); 
 	exchangeDT(); 
 }

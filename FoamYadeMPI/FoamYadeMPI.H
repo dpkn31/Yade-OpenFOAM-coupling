@@ -107,15 +107,12 @@ namespace Foam {
 				    volScalarField& _alpha, 
 				    volVectorField& _uSource, 
 				    volVectorField& _uParticle, 
-				    scalar _rhoF, 
-				    scalar _rhoP,
-				    scalar _nu, 
 				    bool gaussianInterp) : 
 				    mesh(_mesh), U(_U), gradP(_gradP), 
 				    vGrad(_vGrad), divT(_divT), ddtU(_ddtU), 
 				    g(_g), uSourceDrag(_uSourceDrag),  alpha(_alpha), 
 				    uSource(_uSource), uParticle(_uParticle), mshTree(mesh.C())
-				    {isGaussianInterp = gaussianInterp; getRankSize(); setScalarProperties(_rhoP, _rhoF, _nu); }
+				    {isGaussianInterp = gaussianInterp; getRankSize();  }
 			
 			void getRankSize(); 
 			void setScalarProperties(scalar, scalar, scalar); 
@@ -146,6 +143,8 @@ namespace Foam {
 			// simple point force 
 			void stokesDragForce(std::shared_ptr<YadeParticle>& ); 
 			void stokesDragTorque(std::shared_ptr<YadeParticle>& ); 
+			// clear sources 
+			void setSourceZero(); 
 			~FoamYadeMPI(){}; 
 	}; 
   
