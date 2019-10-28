@@ -15,6 +15,7 @@ void Foam::FoamYadeMPI::getRankSize(){
 		// world comm and size 
 		MPI_Comm_rank(MPI_COMM_WORLD, &worldRank); 
 		MPI_Comm_size(MPI_COMM_WORLD, &worldCommSize); 
+		
 		// diff in comm size 
 		commSzDff = abs(worldCommSize-localCommSize); 
 		rankSizeSet = true; 
@@ -26,28 +27,42 @@ void Foam::FoamYadeMPI::getRankSize(){
 		}
 		mshTree.build_tree();  // build tree. 
 	}
+// 	sendMeshBbox();
 	
 }
 
 void Foam::FoamYadeMPI::sendMeshBbox(){
 	//send mesh bbox from point field, min 
-	if (!rankSizeSet) {std::cerr << "" << std::endl; return; }
+	std::cout << "In sending mesh bbox " << std::endl;  
+	if (!rankSizeSet) {std::cerr << " rank and commsize not set. " << std::endl; return; }
 	// get the mesh pointfield (cell vertices), 
+	//FIXME
 	const point& minBound = mesh.bounds().min(); 
 	const point& maxBound = mesh.bounds().max(); 
+	
 	
 	std::vector<double> meshBbox = {minBound.x(), minBound.y(), minBound.z(), maxBound.x(), maxBound.y(), maxBound.z()}; 
 	
 	// send bounding box to every yade proc including yade Master. 
-	for  (int rnk=0; rnk != commSzDff+1; ++rnk){
-		MPI_Send(&meshBbox.front(), 6, MPI_DOUBLE, rnk, TAG_GRID_BBOX, MPI_COMM_WORLD); 
+	for  (int rnk=0; rnk != commSzDff; ++rnk){
+		MPI_Request req; 
+		MPI_Isend(&meshBbox.front(), 6, MPI_DOUBLE, rnk, TAG_GRID_BBOX, MPI_COMM_WORLD, &req); 
+		reqVec.push_back(req);
 	}
+	
+	for (auto rq : reqVec){
+		MPI_Status status; 
+		MPI_Wait(&rq, &status);
+	}
+	
+	reqVec.clear(); 
+	
 }
 
 
 void Foam::FoamYadeMPI::recvYadeIntrs(){
 	
-	for (int rnk = 0; rnk != commSzDff; ++rnk){
+	for (int rnk = 0; rnk != commSzDff-1; ++rnk){
 		MPI_Status status; 
 		MPI_Recv(&yadeProcs[rnk].numParticles, 1, MPI_INT, rnk, TAG_SZ_BUFF, MPI_COMM_WORLD, &status); 
 		
@@ -216,6 +231,19 @@ void Foam::FoamYadeMPI::calcHydroForce(std::shared_ptr<YadeProc>& yProc){
 }
 
 /* Forces */ 
+
+void Foam::FoamYadeMPI::initParticleForce(std::shared_ptr<YadeParticle>& prt){
+
+	prt->hydroForce.x() = 0.0; 
+	prt->hydroForce.y() = 0.0; 
+	prt->hydroForce.z() = 0.0; 
+	
+	prt->hydroTorque.x() = 0.0; 
+	prt->hydroTorque.y() = 0.0; 
+	prt->hydroTorque.z() = 0.0; 
+}
+
+
 void Foam::FoamYadeMPI::hydroDragForce(std::shared_ptr<YadeParticle>&  prt){
 	
 	if (!prt->interpCellWeight.size()) {return; } 
@@ -464,7 +492,8 @@ void Foam::FoamYadeMPI::setSourceZero(){
 void Foam::FoamYadeMPI::setParticleAction(double dt) {
 	
 	deltaT = dt; 
-	if (!rankSizeSet) {getRankSize(); sendMeshBbox();}
+	if (!rankSizeSet) {getRankSize();
+		  std::cout << "done rank size "<< std::endl; sendMeshBbox();}
 	recvYadeIntrs(); 
 	locateAllParticles();
 	

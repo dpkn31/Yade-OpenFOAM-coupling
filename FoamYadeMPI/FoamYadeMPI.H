@@ -10,6 +10,7 @@
 #include "meshTree.H" 
 #include "interpolation.H" 
 #include "interpolationCell.H" 
+#include <mpi.h>
 
 namespace Foam {
   
@@ -63,10 +64,11 @@ namespace Foam {
 			const int TAG_YADE_DT = 1060; 
 	
 		public: 
+			std::vector<MPI_Request> reqVec; 
 			int localRank, worldRank; 
 			int localCommSize, worldCommSize; 
 			int commSzDff; 
-			bool rankSizeSet; 
+			bool rankSizeSet = false; 
 			const fvMesh& mesh; 
 			const volVectorField& U; 
 			const volVectorField& gradP; 
