@@ -92,8 +92,7 @@ int main(int argc, char *argv[])
         vGrad = fvc::grad(Uc);
 
 
-        scalar dt = runTime.deltaT().value();
-        yadeCoupling.setParticleAction(dt);
+        yadeCoupling.setParticleAction(runTime.deltaT().value());
 
 
         alphacf = fvc::interpolate(alphac);
