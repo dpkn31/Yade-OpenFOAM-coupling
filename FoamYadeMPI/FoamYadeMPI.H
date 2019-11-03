@@ -1,3 +1,5 @@
+/*  (c) 2019  Deepak Kunhappan  deepak.kn1990@gmail.com, deepak.kunhappan@3sr-grenoble.fr */ 
+
 #ifndef FoamYadeMPI_H 
 #define FoamYadeMPI_H 
 
@@ -41,11 +43,10 @@ namespace Foam {
 			YadeProc(){}; 
 			int yRank;  							//  world rank of the yade Proc. 
 			std::vector<int> numParticlesProc; 				// number of particles from intersections with yade proc
-			bool inComm; 							//  flag for intersection with this proc. 
+			bool inComm = false; 							//  flag for intersection with this proc. 
 			std::vector<double> particleDataBuff;  				// buff to recv particle info -> pos, vel, dia, etc.
 			std::vector<int> foundBuff; 	       				// buff to send grid search results, 
 			std::vector<double> hydroForceBuff;    				// buff to send hydroforce and torque from each particle belonging to this proc.  
-			std::vector<std::shared_ptr<YadeParticle> > particles;		// vector of 'found particles'
 			std::vector<std::pair<int, double> > pVolContrib; 		// particle vol contribution from this yade proc. 
 			std::vector<std::pair<int, vector> > uParticleContrib;  	// particle velocity contribution from this yade proc. 
 			std::vector<std::shared_ptr<YadeParticle> > foundParticles;	// vector of found particles from this yadeProc. 
@@ -63,7 +64,7 @@ namespace Foam {
 			const int TAG_SEARCH_RES = 1004; 
 			const int TAG_FLUID_DT = 1050; 
 			const int TAG_YADE_DT = 1060; 
-			const double small = 1e-20; 
+			const double small = 1e-09; 
 	
 		public: 
 			std::vector<MPI_Request> reqVec; 
@@ -124,7 +125,7 @@ namespace Foam {
 			void sendMeshBbox(); 
 			void recvYadeIntrs(); 
 			void locateAllParticles(); 
-			bool locatePt(const std::shared_ptr<YadeParticle>& ); 
+			std::vector<int> locatePt(const vector& ); 
 			void buildCellPartList(std::shared_ptr<YadeProc>& ); 
 			void calcInterpWeightGaussian(std::vector<std::shared_ptr<YadeParticle> >& ); 
 			void setCellVolFraction(std::shared_ptr<YadeProc>& ); 
