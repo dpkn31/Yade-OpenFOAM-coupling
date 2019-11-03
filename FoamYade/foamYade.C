@@ -69,7 +69,7 @@ void Foam::foamYade::calcInterpWeightGaussian(std::vector<yadeParticle*>& localP
     yadeParticle* particle = *pIter;
 
      if (! particle -> cellIds.size()) {return ; }
-
+     
      for (unsigned int i=0; i != particle -> cellIds.size(); ++i ) {
        double distsq = 0;
        const double& ds1 = mesh.C()[particle -> cellIds[i]].x() - particle -> pos.x();
@@ -78,15 +78,18 @@ void Foam::foamYade::calcInterpWeightGaussian(std::vector<yadeParticle*>& localP
        distsq = (ds1*ds1)+(ds2*ds2)+(ds3*ds3);
        double weight = exp(-distsq/(2*std::pow(sigma_interp, 2)))*interp_range_cu*sigma_pi;
        particle -> interpCellWeight.push_back(std::make_pair(particle-> cellIds[i],weight));
+      
      }
        //sum the weights
-//      double wSum = 0.0;
-//      for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) {
-//        wSum += particle->interpCellWeight[i].second;  }
-//       // divide by sum:
-//      for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) {
-//        particle -> interpCellWeight[i].second = particle->interpCellWeight[i].second/wSum;
-//      }
+     double wSum = 0.0;
+     for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) {
+       wSum += particle->interpCellWeight[i].second;  }
+      // divide by sum:
+     for (unsigned int i=0; i != particle -> interpCellWeight.size(); ++i ) {
+       particle -> interpCellWeight[i].second = particle->interpCellWeight[i].second/wSum;
+     }
+
+     
    }
 }
 
@@ -430,7 +433,7 @@ void Foam::foamYade::hydroDragForce(yadeParticle* particle){
     pv = pv + (particle->vol*wt);
   }
 
-  alpha_p = alpha_p/(particle-> interpCellWeight.size());
+  //alpha_p = alpha_p/(particle-> interpCellWeight.size());
   const double& alpha_f = 1-alpha_p;
 
   // calculate the force
