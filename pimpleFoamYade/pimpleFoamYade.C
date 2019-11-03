@@ -55,7 +55,8 @@ int main(int argc, char *argv[])
 
     bool gaussianInterp = true;
     FoamYadeMPI yadeCoupling(mesh,Uc, gradP, vGrad, divT,ddtU_f,g,uSourceDrag,alphac,uSource,uParticle,gaussianInterp);
-    yadeCoupling.setScalarProperties(nuValue.value(), partDensity.value(), rhocValue.value());
+    yadeCoupling.setScalarProperties(partDensity.value(), rhocValue.value(), nuValue.value());
+
 
 
 
