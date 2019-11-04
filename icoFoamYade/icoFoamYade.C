@@ -31,7 +31,7 @@ Description
 
 #include "fvCFD.H"
 #include "pisoControl.H"
-#include "foamYade.H"
+#include "FoamYadeMPI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,8 +51,8 @@ int main(int argc, char *argv[])
     Info<< "\nStarting time loop\n" << endl; 
   
     bool gaussianInterp = false;  
-    foamYade yadeCoupling(mesh,U, uSource, uParticle, alphac, gradP,vGrad,divT,uSourceDrag,ddtU_f,g,gaussianInterp);
-    yadeCoupling.setScalarProperties(nu.value(), partDensity.value(), fluidDensity.value() );
+    FoamYadeMPI yadeCoupling(mesh,U, gradP, vGrad, divT,ddtU_f,g,uSourceDrag,alphac,uSource,uParticle,gaussianInterp);
+    yadeCoupling.setScalarProperties(partDensity.value(), fluidDensity.value(), nu.value());
 
 
 //    shear flow velocity initialization    (Remember to re-comment these lines after testing. and compile.)
@@ -67,13 +67,13 @@ int main(int argc, char *argv[])
         Info<< "Time = " << runTime.timeName() << nl << endl;
         #include "CourantNo.H"
 
-        ddtU_f = fvc::ddt(U)+fvc::div(phi, U);
-        gradP = fvc::grad(p);
-        divT = 2*nu.value()*fvc::laplacian(alphac, U);
+       
         vGrad = fvc::grad(U);
 
-        scalar dt = runTime.deltaT().value(); 
-        yadeCoupling.setParticleAction(dt); 
+        
+        yadeCoupling.setParticleAction(runTime.deltaT().value());
+	
+	
         // Momentum predictor
 
         fvVectorMatrix UEqn
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
             fvm::ddt(U)
           + fvm::div(phi, U)
           - fvm::laplacian(nu, U)
-         ==uSource
+           ==uSource
           );
 
         
@@ -140,16 +140,16 @@ int main(int argc, char *argv[])
         }
    
         runTime.write();
-       yadeCoupling.setSourceZero(); 
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"
             << nl << endl;
+	yadeCoupling.setSourceZero(); 
+
     }
 
     Info<< "End\n" << endl;
 
-    yadeCoupling.recvTerminate(); 
     return 0;
 }
 
