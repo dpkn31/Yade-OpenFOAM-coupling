@@ -31,7 +31,7 @@ Description
 
 #include "fvCFD.H"
 #include "pisoControl.H"
-#include "FoamYadeMPI.H"
+#include "FoamYade.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     Info<< "\nStarting time loop\n" << endl; 
   
     bool gaussianInterp = false;  
-    FoamYadeMPI yadeCoupling(mesh,U, gradP, vGrad, divT,ddtU_f,g,uSourceDrag,alphac,uSource,uParticle,gaussianInterp);
+    FoamYade yadeCoupling(mesh,U, gradP, vGrad, divT,ddtU_f,g,uSourceDrag,alphac,uSource,uParticle,gaussianInterp);
     yadeCoupling.setScalarProperties(partDensity.value(), fluidDensity.value(), nu.value());
 
 
