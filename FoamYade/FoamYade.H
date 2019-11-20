@@ -43,7 +43,7 @@ namespace Foam {
 			YadeProc(){}; 
 			int yRank;  							//  world rank of the yade Proc. 
 			std::vector<int> numParticlesProc; 				// number of particles from intersections with yade proc
-			bool inComm = false; 							//  flag for intersection with this proc. 
+			bool inComm = false; 						//  flag for intersection with this proc. 
 			std::vector<double> particleDataBuff;  				// buff to recv particle info -> pos, vel, dia, etc.
 			std::vector<int> foundBuff; 	       				// buff to send grid search results, 
 			std::vector<double> hydroForceBuff;    				// buff to send hydroforce and torque from each particle belonging to this proc.  

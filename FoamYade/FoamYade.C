@@ -529,10 +529,23 @@ void Foam::FoamYade::sendHydroForceYadeMPI(){
 		} 
 	} else {
 	//all reduce
-		for (int np = 0; np != inCommProcs[0]->numParticles; ++np) {
-			for (int j = 0; j != 6; ++j) {
-			  double dummy = 0.0; 
-			  MPI_Allreduce(&inCommProcs[0]->hydroForceBuff[6*np+j],&dummy ,1,MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		if (isGaussianInterp)
+			for (int np = 0; np != inCommProcs[0]->numParticles; ++np) {
+				for (int j = 0; j != 6; ++j) {
+				double dummy = 0.0; 
+				MPI_Allreduce(&inCommProcs[0]->hydroForceBuff[6*np+j],&dummy ,1,MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+			}
+		}
+		else {
+			for (int np = 0; np != inCommProcs[0]->numParticles; ++np){
+				const auto& pIt = std::find_if(inCommProcs->foundParticles.begin(), inCommProcs.foundParticles.end(), 
+				  [np](const auto& prt){return np==prt->indx;}
+				); 
+				if (pIt) {
+					std::vector<double> fBuff = {*pIt->hydroForce.x(),*pIt->hydroForce.y(), *pIt->hydroForce.z(),
+					  *pIt->hydroTorque.x(), *pIt->hydroTorque.y(), *pIt->hydroTorque.z() };
+					  MPI_Send(&fBuff.front(), 6, MPI_DOUBLE, 0, TAG_FORCE, MPI_COMM_WORLD); 
+				}
 			}
 		}
 	}
@@ -602,8 +615,7 @@ void Foam::FoamYade::setParticleAction(double dt) {
 	
 	deltaT = dt; 
 	if (!rankSizeSet) {getRankSize();}
-	
-	recvYadeIntrs(); 
+	if (!serialYade) recvYadeIntrs(); 
 	locateAllParticles();
 	
 	if (isGaussianInterp){
