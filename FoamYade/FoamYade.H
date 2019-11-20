@@ -67,6 +67,7 @@ namespace Foam {
 			const double small = 1e-09; 
 	
 		public: 
+			std::vector<int> sendRanks; // used in serial to identify the force sending proc 
 			std::vector<MPI_Request> reqVec; 
 			int localRank, worldRank; 
 			int localCommSize, worldCommSize; 
@@ -127,30 +128,30 @@ namespace Foam {
 			void recvYadeIntrs(); 
 			void locateAllParticles(); 
 			std::vector<int> locatePt(const vector& ); 
-			void buildCellPartList(std::shared_ptr<YadeProc>& ); 
+			void buildCellPartList(YadeProc* ); 
 			void calcInterpWeightGaussian(std::vector<std::shared_ptr<YadeParticle> >& ); 
-			void setCellVolFraction(std::shared_ptr<YadeProc>& ); 
-			void updateSources(std::shared_ptr<YadeProc>& ); 
+			void setCellVolFraction(YadeProc* ); 
+			void updateSources(YadeProc* ); 
 			void sendHydroForceYadeMPI(); 
 			void exchangeDT();
-			void sendHydroTimeScale(std::shared_ptr<YadeProc>& ); 
+			void sendHydroTimeScale(YadeProc* ); 
 			void setParticleAction(double ); 
 			void terminateRun(); 
-			void initParticleForce(std::shared_ptr<YadeParticle>& ); 
+			void initParticleForce(YadeParticle* ); 
 			void clearYadeProcs(); 
 			void clearInCommProcs(); 
 			//forces
-			void calcHydroForce(std::shared_ptr<YadeProc>& ); 
-			void calcHydroTorque(std::shared_ptr<YadeProc>& ); 
+			void calcHydroForce(YadeProc* ); 
+			void calcHydroTorque(YadeProc* ); 
 			// vol averaged 
-			void hydroDragForce(std::shared_ptr<YadeParticle>& );
-			void buoyancyForce(std::shared_ptr<YadeParticle>& ); 
-			void addedMassForce(std::shared_ptr<YadeParticle>& ); 
-			void archimedesForce(std::shared_ptr<YadeParticle>& ); 
+			void hydroDragForce(YadeParticle*);
+			void buoyancyForce(YadeParticle* ); 
+			void addedMassForce(YadeParticle*); 
+			void archimedesForce(YadeParticle* ); 
 			void calcHydroTimeScale(); 
 			// simple point force 
-			void stokesDragForce(std::shared_ptr<YadeParticle>& ); 
-			void stokesDragTorque(std::shared_ptr<YadeParticle>& ); 
+			void stokesDragForce(YadeParticle*); 
+			void stokesDragTorque(YadeParticle*); 
 			// clear sources 
 			void setSourceZero(); 
 			
