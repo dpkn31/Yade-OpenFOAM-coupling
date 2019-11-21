@@ -56,9 +56,9 @@ int main(int argc, char *argv[])
 
 
 //    shear flow velocity initialization    (Remember to re-comment these lines after testing. and compile.)
-//    forAll(U, cellI) {
-//       U[cellI].x() = (1.0*mesh.C()[cellI].y()) - 0.05; 
-//    } 
+   forAll(U, cellI) {
+      U[cellI].x() = (1.0*mesh.C()[cellI].y()) - 0.05; 
+   } 
 
 
 
@@ -147,9 +147,8 @@ int main(int argc, char *argv[])
 	yadeCoupling.setSourceZero(); 
 
     }
-
+    yadeCoupling.finalizeRun(); 
     Info<< "End\n" << endl;
-
     return 0;
 }
 

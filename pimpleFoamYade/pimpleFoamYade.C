@@ -61,9 +61,9 @@ int main(int argc, char *argv[])
 
 
 //     shear flow velocity initialization    
-//    forAll(Uc, cellI) {
-//       Uc[cellI].x() = (0.4*mesh.C()[cellI].y())-0.2; 
-//    } 
+   forAll(Uc, cellI) {
+      Uc[cellI].x() = (0.4*mesh.C()[cellI].y())-0.2; 
+   } 
 // 
 
 //  forAll(Uc, cellI) {
