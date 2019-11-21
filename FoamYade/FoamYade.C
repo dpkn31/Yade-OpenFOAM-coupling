@@ -179,7 +179,6 @@ void Foam::FoamYade::locateAllParticles(){
 		  allocArrays(yProc->numParticles, yProc); 
 		  //get particleDataBuff   
 		  std::vector<double>& dBuff = yProc->particleDataBuff; 
-		  std::cout << "dbuff size = " << dBuff.size()  << " rank = " << worldRank << std::endl;  
 		  MPI_Bcast(&dBuff.front(), (int) dBuff.size(), MPI_DOUBLE, 0, MPI_COMM_WORLD); 
 		  std::fill(yProc->foundBuff.begin(),yProc->foundBuff.end(), -1);
 		  sendRanks.resize(yProc->numParticles); std::fill(sendRanks.begin(), sendRanks.end(), -1); 
@@ -228,7 +227,6 @@ void Foam::FoamYade::locateAllParticles(){
 			
 			if (serialYade) {
 				MPI_Allreduce(&found,&sendRanks[np],1, MPI_INT, MPI_MAX, MPI_COMM_WORLD); 
-				std::cout << "send rank =" << sendRanks[np] << std::endl;
 				if (localRank == 0 && sendRanks[np] < 0) {
 					Info << "particle indx = " << np << " pos = " << pos <<  "  was not found in FOAM" << endl; 
 				}
@@ -546,7 +544,6 @@ void Foam::FoamYade::sendHydroForceYadeMPI(){
 			}
 		}
 		else {
-			std::cout << "sending forces " << std::endl; 
 			const auto& yProc = inCommProcs[0]; 
 			for (int np = 0; np != yProc->numParticles; ++np){
 				if (sendRanks[np] == worldRank) {
@@ -561,7 +558,6 @@ void Foam::FoamYade::sendHydroForceYadeMPI(){
 					MPI_Send(&fBuff.front(), 6, MPI_DOUBLE, 0, TAG_FORCE, MPI_COMM_WORLD); 
 				}
 			}
-			std::cout << "forces done  " << "rank = " << worldRank  << std::endl; 
 		}
 	}
 	
@@ -599,7 +595,6 @@ void Foam::FoamYade::setSourceZero(){
 }
 
 void Foam::FoamYade::clearInCommProcs(){
-	std::cout << "clearing in comm procs --> " << " rank = " << worldRank << std::endl; 
 	if (inCommProcs.size()){
 		for (const auto& yp : inCommProcs){
 			yp->foundBuff.clear(); 
@@ -626,8 +621,10 @@ void Foam::FoamYade::sendHydroTimeScale(YadeProc* yProc ){
 
 
 
-void Foam::FoamYade::terminateRun(){
-	return;
+void Foam::FoamYade::finalizeRun(){
+	int value = -1; 
+	MPI_Bcast(&value, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	if (value == 10) MPI_Finalize(); 
 }
 
 

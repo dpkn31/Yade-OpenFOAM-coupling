@@ -34,7 +34,7 @@ namespace Foam {
 			label inCell; 
 			int indx; 
 			void calcPartVol(){if (!isFib) vol = M_PI*std::pow(dia, 3.0)/6.0; } 
-			~YadeParticle(){}; 
+			virtual ~YadeParticle(){}; 
 			
 	};
 	
@@ -136,7 +136,6 @@ namespace Foam {
 			void exchangeDT();
 			void sendHydroTimeScale(YadeProc* ); 
 			void setParticleAction(double ); 
-			void terminateRun(); 
 			void initParticleForce(YadeParticle* ); 
 			void clearYadeProcs(); 
 			void clearInCommProcs(); 
@@ -154,10 +153,11 @@ namespace Foam {
 			void stokesDragTorque(YadeParticle*); 
 			// clear sources 
 			void setSourceZero(); 
-			
+			//for debug
 			void printMsg(const std::string& ); 
-			
-			~FoamYade(){}; 
+			// terminate run 
+			void finalizeRun(); 
+			virtual ~FoamYade(){}; 
 	}; 
   
 }
