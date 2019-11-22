@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 	yadeCoupling.setSourceZero(); 
 
     }
-    yadeCoupling.finalizeRun(); 
+    //yadeCoupling.finalizeRun(); 
     Info<< "End\n" << endl;
     return 0;
 }
