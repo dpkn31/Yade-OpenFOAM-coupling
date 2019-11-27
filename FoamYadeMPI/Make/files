@@ -1,3 +1,0 @@
-FoamYadeMPI.C
-LIB=$(FOAM_USER_LIBBIN)/libYadeFoamMPI
-
