@@ -7,6 +7,8 @@ An OpenFOAM solver for realizing CFD-DEM simulations with the Open Source Discre
  * Documentation : https://yade-dev.gitlab.io/trunk/FoamCoupling.html
  * Examples : https://gitlab.com/yade-dev/trunk/tree/master/examples/openfoam
 
+##UPDATE (27 Nov 2019) 
+* Full parallel coupling between Yade and OpenFOAM (as Yade is now fully parallel based on MPI) 
 
 ![Alt text](ccpl1.png)
 
