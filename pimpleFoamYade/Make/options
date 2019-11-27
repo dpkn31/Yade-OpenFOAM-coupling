@@ -12,7 +12,6 @@ EXE_INC = \
     -I$(LIB_SRC)/meshTools/lnInclude  \
     -I../FoamYade/lnInclude			\
     -I../FoamYade/meshtree       \
-    -I../FoamYade/commYade/lnInclude	\
     -I$(LIB_SRC)/Pstream/mpi/lnInclude  \
     $(PFLAGS) $(PINC) -std=gnu++0x
 
@@ -26,8 +25,7 @@ EXE_LIBS = \
     -lfvOptions \
     -lmeshTools \
     -L$(FOAM_USER_LIBBIN) \
-    -lYadeComm  \
     -lMeshTree  \
-    -lYadeFoam  \
+    -lYadeFoam	\
     -L$(FOAM_LIBBIN)/$(FOAM_MPI)/lPstream	\
      $(PLIBS)

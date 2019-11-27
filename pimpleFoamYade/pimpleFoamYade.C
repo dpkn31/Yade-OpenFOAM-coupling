@@ -35,7 +35,7 @@ Description
 #include "singlePhaseTransportModel.H"
 #include "PhaseIncompressibleTurbulenceModel.H"
 #include "pimpleControl.H"
-#include "foamYade.H"
+#include "FoamYade.H"
 
 int main(int argc, char *argv[])
 {
@@ -54,16 +54,17 @@ int main(int argc, char *argv[])
 
 
     bool gaussianInterp = true;
-    foamYade yadeCoupling(mesh,Uc, uSource, uParticle, alphac, gradP,vGrad,divT,uSourceDrag,ddtU_f,g,gaussianInterp);
-    yadeCoupling.setScalarProperties(nuValue.value(), partDensity.value(), rhocValue.value());
+    FoamYade yadeCoupling(mesh,Uc, gradP, vGrad, divT,ddtU_f,g,uSourceDrag,alphac,uSource,uParticle,gaussianInterp);
+    yadeCoupling.setScalarProperties(partDensity.value(), rhocValue.value(), nuValue.value());
+
 
 
 
 //     shear flow velocity initialization    
 //    forAll(Uc, cellI) {
-//       Uc[cellI].x() = (4.0*mesh.C()[cellI].y())-2.0; 
- //   } 
-
+//       Uc[cellI].x() = (0.4*mesh.C()[cellI].y())-0.2; 
+//    } 
+// 
 
 //  forAll(Uc, cellI) {
 //    Uc[cellI].x() = 0.0;
@@ -92,8 +93,7 @@ int main(int argc, char *argv[])
         vGrad = fvc::grad(Uc);
 
 
-        scalar dt = runTime.deltaT().value();
-        yadeCoupling.setParticleAction(dt);
+        yadeCoupling.setParticleAction(runTime.deltaT().value());
 
 
         alphacf = fvc::interpolate(alphac);
@@ -128,7 +128,6 @@ int main(int argc, char *argv[])
 
     Info<< "End\n" << endl;
 
-    yadeCoupling.recvTerminate(); 
     return 0;
 }
 
