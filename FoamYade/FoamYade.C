@@ -639,18 +639,20 @@ void Foam::FoamYade::setParticleAction(double dt) {
 	locateAllParticles();
 	
 	if (isGaussianInterp){
-		if (!inCommProcs.size()){return; }
-		for (const auto& yProc : inCommProcs){
-			buildCellPartList(yProc.get());
-			setCellVolFraction(yProc.get());
-			calcHydroForce(yProc.get());
-			calcHydroTorque(yProc.get());
+		if (inCommProcs.size()){
+			for (const auto& yProc : inCommProcs){
+				buildCellPartList(yProc.get());
+				setCellVolFraction(yProc.get());
+				calcHydroForce(yProc.get());
+				calcHydroTorque(yProc.get());
+			}
 		}
 	} else {
-		if (!inCommProcs.size()){return; }
-		for (const auto yProc : inCommProcs){
-			calcHydroForce(yProc.get());
-			calcHydroTorque(yProc.get());
+		if (inCommProcs.size()){
+			for (const auto yProc : inCommProcs){
+				calcHydroForce(yProc.get());
+				calcHydroTorque(yProc.get());
+			}
 		}
 	}
 	
