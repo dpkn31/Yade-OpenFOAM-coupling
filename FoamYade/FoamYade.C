@@ -67,7 +67,7 @@ void Foam::FoamYade::initFields(){
 	
 	alpha = 1.0; 
 	interpRange = std::pow(mesh.V()[0], 1.0/3.0);
-	if (isGaussianInterp) {interpRange = 2*interpRange; }
+	if (isGaussianInterp) {interpRange = 3*interpRange; }
 	sigmaInterp = interpRange*0.42460; // interp_range/(2sqrt(2ln(2))) filter width half maximum;
 	interpRangeCu = std::pow(interpRange, 3.0); 
 	sigmaPi = 1.0/(std::pow(2*M_PI*sigmaInterp*sigmaInterp, 1.5));   
@@ -247,7 +247,7 @@ void Foam::FoamYade::locateAllParticles(){
 }
 
 std::vector<int> Foam::FoamYade::locatePt(const vector& pt){
-	if (serialYade) {
+	if (!isGaussianInterp) {
 		std::vector<int> cellId; 
 		int inCell = mesh.findCell(pt); 
 		if (inCell > -1) cellId.push_back(inCell); 
@@ -307,12 +307,8 @@ void Foam::FoamYade::calcInterpWeightGaussian(std::vector<std::shared_ptr<YadePa
 			distsq = (ds1*ds1)+ (ds2*ds2) + (ds3*ds3); 
 			double weight = exp(-distsq/(2*std::pow(sigmaInterp, 2)))*interpRangeCu*sigmaPi;
 			prt -> interpCellWeight.push_back(std::make_pair(prt->cellIds[i], weight)); 
-			wSum += weight; 
 		}
 		
-		for (auto & cellWt : prt->interpCellWeight ){
-			cellWt.second = cellWt.second/wSum; 
-		}
 		
 		
 	}  
