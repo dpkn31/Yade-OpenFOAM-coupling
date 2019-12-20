@@ -365,7 +365,6 @@ void Foam::FoamYade::hydroDragForce(YadeParticle*  prt){
 	
 	alpha_p = alpha_p/(prt-> interpCellWeight.size());
 	pv = pv/ (prt->interpCellWeight.size()); 
-	Info << "pv = " << pv << "  prt vol = " << prt->vol << endl;
 	
 	const double& alpha_f = 1 - alpha_p; 
 	// force calculation, 
