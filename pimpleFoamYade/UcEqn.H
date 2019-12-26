@@ -1,10 +1,10 @@
 // tmp <volVectorField> relvel = Uc-uParticle;
 
-  fvVectorMatrix UcEqn
+fvVectorMatrix UcEqn
 (
-  fvm::ddt(alphac, Uc) + fvm::div(alphaPhic, Uc)
-- fvm::Sp(fvc::ddt(alphac) + fvc::div(alphaPhic), Uc)
-+ continuousPhaseTurbulence->divDevRhoReff(Uc)
+    fvm::ddt(alphac, Uc) + fvm::div(alphaPhic, Uc)
+  - fvm::Sp(fvc::ddt(alphac) + fvc::div(alphaPhic), Uc)
+  + continuousPhaseTurbulence->divDevRhoReff(Uc)
  ==
     fvm::Sp(uSourceDrag,Uc)
 );
@@ -12,7 +12,6 @@
 UcEqn.relax();
 
 volScalarField rAUc(1.0/UcEqn.A());
-
 surfaceScalarField rAUcf("Dp", fvc::interpolate(rAUc));
 
 surfaceScalarField phicForces

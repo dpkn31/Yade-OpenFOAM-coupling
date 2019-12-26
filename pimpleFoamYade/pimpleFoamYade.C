@@ -39,9 +39,9 @@ Description
 
 int main(int argc, char *argv[])
 {
-
-
+  
     #include "postProcess.H"
+
     #include "setRootCaseLists.H"
     #include "createTime.H"
     #include "createMesh.H"
@@ -50,28 +50,13 @@ int main(int argc, char *argv[])
     #include "createFields.H"
     #include "initContinuityErrs.H"
 
-    Info<< "\nStarting time loop\n" << endl;
-
-
     bool gaussianInterp = true;
     FoamYade yadeCoupling(mesh,Uc, gradP, vGrad, divT,ddtU_f,g,uSourceDrag,alphac,uSource,uParticle,gaussianInterp);
     yadeCoupling.setScalarProperties(partDensity.value(), rhocValue.value(), nuValue.value());
 
 
+    Info<< "\nStarting time loop\n" << endl;
 
-
-//     shear flow velocity initialization    
-//    forAll(Uc, cellI) {
-//       Uc[cellI].x() = (0.4*mesh.C()[cellI].y())-0.2; 
-//    } 
-// 
-
-//  forAll(Uc, cellI) {
-//    Uc[cellI].x() = 0.0;
-//    Uc[cellI].y() = 0.0;
-//    Uc[cellI].z() = 0.0;
-//  }
-////
     while (runTime.run())
     {
         #include "readTimeControls.H"
@@ -81,25 +66,26 @@ int main(int argc, char *argv[])
         runTime++;
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
-
+	
         continuousPhaseTransport.correct();
         muc = rhoc*continuousPhaseTransport.nu();
 
-        // upadte gradp, divT, and
-
-        ddtU_f = fvc::ddt(Uc)+fvc::div(phic, Uc);
+	ddtU_f = fvc::ddt(Uc)+fvc::div(phic, Uc);
         gradP = fvc::grad(p);
         divT = 2*nuValue.value()*fvc::laplacian(alphac, Uc);
         vGrad = fvc::grad(Uc);
 
-
         yadeCoupling.setParticleAction(runTime.deltaT().value());
 
 
+
+        // Update continuous phase volume fraction field
+        alphac.correctBoundaryConditions();
         alphacf = fvc::interpolate(alphac);
-        alphaPhic = alphacf*phic;
-
-
+	alphaPhic = alphacf*phic;
+	
+	uSource.correctBoundaryConditions(); 
+	uSourceDrag.correctBoundaryConditions(); 
 
         // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
@@ -119,8 +105,9 @@ int main(int argc, char *argv[])
         }
 
         runTime.write();
-        yadeCoupling.setSourceZero();
-
+	
+	yadeCoupling.setSourceZero(); 
+	
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"
             << nl << endl;
