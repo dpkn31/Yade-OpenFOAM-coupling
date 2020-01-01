@@ -150,22 +150,23 @@ std::vector<int> Foam::meshTree::nnearestCellsRange(const vector& v, const doubl
 {
 
   meshpt px(&v.x(), &v.y(), &v.z(), -1); 
-  const unsigned int maxelem = 12; 
+  const unsigned int maxelem = 16; 
   pqueue pq(maxelem);  // = new pqueue(maxelem);
   pq.maxdist = (range*range )+(0.25*range*range);  
   double dist = distance(root->p, px); 
-  kdNode* bestnode = nnearest(root,px, root, dist,0, pq);
+  double d = range; 
+  kdNode* bestnode = nnearest(root,px, root, d,0, pq);
 
   std::vector<int> ids; //if (!pq -> container.size()) ids.push_back(bestnode -> p.id); 
 
-  if ( !np || (pq.container.size()==0)) {pq.container.clear(); return ids;  }
-  else {
+  if ( !np || (pq.container.size()==0)) { return ids; }  
+  //else {
   for (unsigned int i=0; i!= pq.container.size(); ++i)
   {
     int id = pq.container[i].first->p.id; 
     ids.push_back(id); 
     
-  } }
+  } //}
 
 //  for (unsigned int i=0; i != pq -> container.size(); ++ i) {
 //      delete pq -> container[i].first; 
