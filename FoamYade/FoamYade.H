@@ -33,7 +33,9 @@ namespace Foam {
 			int inProc; 
 			label inCell; 
 			int indx; 
-			void calcPartVol(){if (!isFib) vol = M_PI*std::pow(dia, 3.0)/6.0; } 
+			void calcPartVol(){if (!isFib) vol = M_PI*std::pow(dia, 3.0)/6.0; }  
+			bool sharedParticle = false; 
+			std::vector<int> commRanks; 
 			virtual ~YadeParticle(){}; 
 			
 	};
@@ -88,7 +90,7 @@ namespace Foam {
 			volScalarField& alpha; 
 			volVectorField& uSource; 
 			volVectorField& uParticle; 
-			bool serialYade; 
+			bool serialYade=false; 
 			
 			meshTree mshTree; 
 			double yadeDT; 
