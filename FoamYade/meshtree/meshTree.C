@@ -153,7 +153,6 @@ std::vector<int> Foam::meshTree::nnearestCellsRange(const vector& v, const doubl
   const unsigned int maxelem = 16; 
   pqueue pq(maxelem);  // = new pqueue(maxelem);
   pq.maxdist = (range*range )+(0.25*range*range);  
-  double dist = distance(root->p, px); 
   double d = range; 
   kdNode* bestnode = nnearest(root,px, root, d,0, pq);
 
