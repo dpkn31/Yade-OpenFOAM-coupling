@@ -53,8 +53,7 @@ int main(int argc, char *argv[])
     bool gaussianInterp = true;
     FoamYade yadeCoupling(mesh,Uc, gradP, vGrad, divT,ddtU_f,g,uSourceDrag,alphac,uSource,uParticle,gaussianInterp);
     yadeCoupling.setScalarProperties(partDensity.value(), rhocValue.value(), nuValue.value());
-
-
+    
     Info<< "\nStarting time loop\n" << endl;
 
     while (runTime.run())

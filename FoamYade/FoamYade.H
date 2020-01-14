@@ -34,8 +34,9 @@ namespace Foam {
 			label inCell; 
 			int indx; 
 			void calcPartVol(){if (!isFib) vol = M_PI*std::pow(dia, 3.0)/6.0; }  
-			bool sharedParticle = false; 
-			std::vector<int> commRanks; 
+			bool sharedParticle = false;
+			int owner; 
+			std::vector<int> commRanks; // get interp weights & wighted data of this particle from this vec of ranks. 
 			virtual ~YadeParticle(){}; 
 			
 	};
@@ -52,6 +53,7 @@ namespace Foam {
 			std::vector<std::pair<int, double> > pVolContrib; 		// particle vol contribution from this yade proc. 
 			std::vector<std::pair<int, vector> > uParticleContrib;  	// particle velocity contribution from this yade proc. 
 			std::vector<std::shared_ptr<YadeParticle> > foundParticles;	// vector of found particles from this yadeProc. 
+			std::vector<int> sharedPindxs; 
 			int numParticles; 
 			~YadeProc(){}; 
 	}; 
@@ -66,9 +68,12 @@ namespace Foam {
 			const int TAG_SEARCH_RES = 1004; 
 			const int TAG_FLUID_DT = 1050; 
 			const int TAG_YADE_DT = 1060; 
+			const int TAG_SHARED_ID = 1080; 
+			const int TAG_ID = 1090; 
 			const double small = 1e-09; 
 	
 		public: 
+// 			std::map<int, int> cellCount; 
 			std::vector<int> sendRanks; // used in serial to identify the force sending proc 
 			std::vector<MPI_Request> reqVec; 
 			int localRank, worldRank; 
@@ -159,8 +164,18 @@ namespace Foam {
 			void printMsg(const std::string& ); 
 			// terminate run 
 			void finalizeRun(); 
+			int getpIndx(const std::vector<std::shared_ptr<YadeParticle>>& , const int& ); 
 			virtual ~FoamYade(){}; 
+	};
+	
+	
+	class cmpPrt {
+		public:
+			cmpPrt(){}; 
+			bool operator()(const std::shared_ptr<YadeParticle>& prt,const int&  indx) {return indx == prt->indx; }
+			~cmpPrt(){}; 
 	}; 
+
   
 }
 #endif

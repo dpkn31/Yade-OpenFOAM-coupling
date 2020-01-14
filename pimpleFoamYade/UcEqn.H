@@ -6,7 +6,7 @@ fvVectorMatrix UcEqn
   - fvm::Sp(fvc::ddt(alphac) + fvc::div(alphaPhic), Uc)
   + continuousPhaseTurbulence->divDevRhoReff(Uc)
  ==
-    fvm::Sp(uSourceDrag,Uc)
+    fvm::Sp(uSourceDrag,Uc) + fvc::Sp(uSourceDrag, uParticle)
 );
 
 UcEqn.relax();
