@@ -158,7 +158,7 @@ std::vector<int> Foam::meshTree::nnearestCellsRange(const vector& v, const doubl
 
   std::vector<int> ids; //if (!pq -> container.size()) ids.push_back(bestnode -> p.id); 
 
-  if ( !np || (pq.container.size()==0)) { ids.push_back(bestnode -> p.id); }  
+  if ( !np || (pq.container.size()==0)) { return ids;  }  
   //else {
   for (unsigned int i=0; i!= pq.container.size(); ++i)
   {

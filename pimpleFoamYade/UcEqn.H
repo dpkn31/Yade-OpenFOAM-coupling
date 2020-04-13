@@ -1,12 +1,11 @@
-// tmp <volVectorField> relvel = Uc-uParticle;
 
 fvVectorMatrix UcEqn
 (
     fvm::ddt(alphac, Uc) + fvm::div(alphaPhic, Uc)
   - fvm::Sp(fvc::ddt(alphac) + fvc::div(alphaPhic), Uc)
   + continuousPhaseTurbulence->divDevRhoReff(Uc)
- ==
-    fvm::Sp(uSourceDrag,Uc) + fvc::Sp(uSourceDrag, uParticle)
+ == (uCoeff*Uc) + (uSourceDrag*uParticle)
+ 
 );
 
 UcEqn.relax();

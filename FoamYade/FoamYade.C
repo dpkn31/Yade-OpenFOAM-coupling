@@ -59,12 +59,13 @@ void Foam::FoamYade::initFields(){
 			uParticle[cellI] = vector(0.0,0.0,0.0); 
 			alpha[cellI] = 1.0; 
 			uSourceDrag[cellI] =0.0;
+			uCoeff[cellI] = 0.0; 
+			uInterp[cellI] = vector(0.0,0.0,0.0); 
 		}
 		
 	}
-	
 	alpha = 1.0; 
-	interpRange = 3.0*std::pow(mesh.V()[0], 1.0/3.0);
+	interpRange = 1.0*std::pow(mesh.V()[0], 1.0/3.0);
 	//sigmaInterp = interpRange*0.42460; // interp_range/(2sqrt(2ln(2))) filter width half maximum;
 	//interpRangeCu = std::pow(interpRange, 3.0); 
 	sigmaPi = 1.0/(std::pow(M_PI*interpRange*interpRange, 1.5));   
@@ -219,7 +220,6 @@ void Foam::FoamYade::locateAllParticles(){
 		if (sharedCount[i] > 0) sharedBuff[i].resize(sharedCount[i]); 
 	}
 	
-	Pout << "rnk size = " << rnks.size() << endl;  
 		
 	 
 	if (rnks.size()) {
@@ -248,7 +248,6 @@ void Foam::FoamYade::locateAllParticles(){
 // 				const int& pIndx = buff[0]; 
 // 				const int& shardIndx = getpIndx(yPrc->foundParticles, pIndx); 
 // 				if (shardIndx >=  0 ) {
-// 					Pout << "sharedIndx  = " <<  shardIndx << endl; 
 // 					yPrc->foundParticles[shardIndx]->sharedParticle = true ; 
 // 					yPrc->foundParticles[shardIndx]->commRanks.resize(buff.size()-1); 
 // 					std::copy(buff.begin()+1, buff.end(), yPrc->foundParticles[shardIndx]->commRanks.begin()); 
@@ -259,38 +258,37 @@ void Foam::FoamYade::locateAllParticles(){
 // 			}
 // 		}
 // 		
-// 		//define 'owner' for the shared particles. 
-// // 		for (const auto& yProc : inCommProcs) {
-// // 			for (const auto& inx  : yProc->sharedPindxs) {
-// // 				const auto& prt = yProc->foundParticles[inx];
-// // 				int numCells = prt->cellIds.size(); 
-// // 				std::vector<int> otherCellSz; otherCellSz.resize(prt->commRanks.size());
-// // 				// send and recv the sizes of cellids from each proc. The proc having the largest sz of cellids is the  particle owner. 
-// // 				// first send.. 
-// // 				std::vector<MPI_Request> reqs; 
-// // 				
-// // 				for (const auto& rnk : prt->commRanks){
-// // 					MPI_Request req; 
-// // 					MPI_Isend(&numCells, 1, MPI_INT, rnk, TAG_ID, MPI_COMM_WORLD, &req); 
-// // 					reqs.push_back(req);
-// // 				}
-// // 				// recv . 
-// // 				int n = 0; 
-// // 				for (const auto& rnk : prt->commRanks) {
-// // 					MPI_Status stat; 
-// // 					MPI_Recv(&otherCellSz[n], 1, MPI_INT, rnk, TAG_ID, MPI_COMM_WORLD, &stat); 
-// // 					++n; 
-// // 				}
-// // 				
-// // 				// complete MPI_Isend 
-// // 				for (auto& req : reqs) {
-// // 					MPI_Status stat; 
-// // 					MPI_Wait(&req, &stat); 
-// // 				}
-// // 				Pout << "recvd info from other procs " << endl;  
-// // 				
-// // 			}
-// // 		} 
+// // 		//define 'owner' for the shared particles. 
+// 		for (const auto& yProc : inCommProcs) {
+// 			for (const auto& inx  : yProc->sharedPindxs) {
+// 				const auto& prt = yProc->foundParticles[inx];
+// 				int numCells = prt->cellIds.size(); 
+// 				std::vector<int> otherCellSz; otherCellSz.resize(prt->commRanks.size());
+// 				// send and recv the sizes of cellids from each proc. The proc having the largest sz of cellids is the  particle owner. 
+// 				// first send.. 
+// 				std::vector<MPI_Request> reqs; 
+// 				
+// 				for (const auto& rnk : prt->commRanks){
+// 					MPI_Request req; 
+// 					MPI_Isend(&numCells, 1, MPI_INT, rnk, TAG_ID, MPI_COMM_WORLD, &req); 
+// 					reqs.push_back(req);
+// 				}
+// 				// recv . 
+// 				int n = 0; 
+// 				for (const auto& rnk : prt->commRanks) {
+// 					MPI_Status stat; 
+// 					MPI_Recv(&otherCellSz[n], 1, MPI_INT, rnk, TAG_ID, MPI_COMM_WORLD, &stat); 
+// 					++n; 
+// 				}
+// 				
+// 				// complete MPI_Isend 
+// 				for (auto& req : reqs) {
+// 					MPI_Status stat; 
+// 					MPI_Wait(&req, &stat); 
+// 				}
+// 				
+// 			}
+// 		} 
 // 		
 	}
 }
@@ -319,6 +317,8 @@ std::vector<int> Foam::FoamYade::locatePt(const vector& pt){
 }
 
 
+
+
 void Foam::FoamYade::buildCellPartList(YadeProc* yProc) {
 //  build contribution from particles to the grid from a givebn yade Proc. 
 	if (! yProc->foundParticles.size() ) { return; }
@@ -327,29 +327,53 @@ void Foam::FoamYade::buildCellPartList(YadeProc* yProc) {
 		for (unsigned int i =0 ; i != prt->interpCellWeight.size(); ++i){
 			const label& cellId = prt->interpCellWeight[i].first; 
 			const double& weight = prt->interpCellWeight[i].second; 
-			const double& pVol = prt->vol; 
-			if ((yProc->pVolContrib.size()==0) || (yProc->uParticleContrib.size()==0)){
-				yProc->pVolContrib.push_back(std::make_pair(cellId, pVol*weight)); 
-				yProc->uParticleContrib.push_back(std::make_pair(cellId, weight*prt->linearVelocity*pVol)); 
-				
-			} else {
-				int c=0; 
-				for (unsigned i =0; i != yProc->pVolContrib.size(); ++i) {
-					if (yProc->pVolContrib[i].first == cellId && yProc->uParticleContrib[i].first == cellId) {
-						yProc->pVolContrib[i].second += (pVol*weight); 
-						yProc->uParticleContrib[i].second += (prt->linearVelocity*weight*pVol); 
-						c +=1; 
-					}  
-				}
-				if (c==0) {
-						yProc->pVolContrib.push_back(std::make_pair(cellId, pVol*weight)); 
-						yProc->uParticleContrib.push_back(std::make_pair(cellId, weight*prt->linearVelocity*pVol)); 
-					}
-			}
+			setPvolContrib(cellId, prt->vol*weight, prt->linearVelocity*weight*prt->vol); 
 		}
+	}
+	
+}
+
+void Foam::FoamYade::setPvolContrib(const int& cellId, const double& pVol, const vector& pVel) {
+	// if empty insert contribution, 
+	if (! pVolcontrib.size() ) {
+			pVolcontrib.insert({cellId, std::make_pair(pVol, pVel)}); 
+			cellCount.push_back(std::make_pair(cellId, 1));
+			return;  
+	}
+	std::map<int, std::pair<double, vector> >::iterator it = pVolcontrib.find(cellId);
+	if ( it == pVolcontrib.end()) {
+		pVolcontrib.insert({cellId, std::make_pair(pVol, pVel)});   
+		cellCount.push_back(std::make_pair(cellId,1));
+	} else { 
+		
+		it->second.first += pVol; 
+		it->second.second += pVel; 
+		incrementCellCount(cellId); 
+
 	}
 }
 
+void Foam::FoamYade::incrementCellCount(const int& cellId) {
+	for (auto& cellC : cellCount) {
+		if (cellC.first == cellId) {cellC.second += 1;} 
+	}
+}
+
+
+void Foam::FoamYade::setCellVolFraction(){
+	// set the fluid vol fraction and particle velocity to the grid; 
+	if (!pVolcontrib.size()) {return; } 
+	for (const auto& iv : pVolcontrib) {
+		const int& cellId = iv.first; 
+		const double& pVol = iv.second.first/mesh.V()[cellId]; 
+		const vector& pVel = iv.second.second/mesh.V()[cellId]; 
+		const double& vfrc = 1.0 - pVol; 
+		alpha[cellId] = (vfrc > 0.20 && vfrc < 1.0 ) ? vfrc : 0.20; 
+		uParticle[cellId] = pVel/(1.0-alpha[cellId]); 
+		
+	}
+	
+}
 
 void Foam::FoamYade::calcInterpWeightGaussian(std::vector<std::shared_ptr<YadeParticle> >& yParticles ){
   
@@ -376,17 +400,56 @@ void Foam::FoamYade::calcInterpWeightGaussian(std::vector<std::shared_ptr<YadePa
 	}  
 }
 
-void Foam::FoamYade::setCellVolFraction(YadeProc* yProc){
-	// set the vol fraction and particle velocity to the grid from the pVolContrib and uParticleContrib arrays from each yade proc. 
-	if (!yProc->pVolContrib.size() || !yProc->uParticleContrib.size()) {return; }
-	for (unsigned i=0; i != yProc->pVolContrib.size(); ++i){
-		const label& id = yProc->pVolContrib[i].first; 
-		const double& pvolC = 1.0-(yProc->pVolContrib[i].second/mesh.V()[id]); 
-		alpha[id] = ((pvolC > 0.10) ? pvolC : 0.10);
-		uParticle[id] = yProc->uParticleContrib[i].second/(mesh.V()[id]*(1-alpha[id])); 
-	}
-	
-}
+
+
+
+// void Foam::FoamYade::buildCellPartList(YadeProc* yProc) {
+// //  build contribution from particles to the grid from a givebn yade Proc. 
+// 	if (! yProc->foundParticles.size() ) { return; }
+// 	calcInterpWeightGaussian(yProc->foundParticles);
+// 	for (auto& prt : yProc->foundParticles) {
+// 		for (unsigned int i =0 ; i != prt->interpCellWeight.size(); ++i){
+// 			const label& cellId = prt->interpCellWeight[i].first; 
+// 			const double& weight = prt->interpCellWeight[i].second; 
+// 			const double& pVol = prt->vol; 
+// 			if ((yProc->pVolContrib.size()==0) || (yProc->uParticleContrib.size()==0)){
+// 				yProc->pVolContrib.push_back(std::make_pair(cellId, pVol*weight)); 
+// 				yProc->uParticleContrib.push_back(std::make_pair(cellId, weight*prt->linearVelocity*pVol)); 
+// 				
+// 			} else {
+// 				int c=0; 
+// 				for (unsigned i =0; i != yProc->pVolContrib.size(); ++i) {
+// 					if (yProc->pVolContrib[i].first == cellId && yProc->uParticleContrib[i].first == cellId) {
+// 						yProc->pVolContrib[i].second += (pVol*weight); 
+// 						yProc->uParticleContrib[i].second += (prt->linearVelocity*weight*pVol); 
+// 						c +=1; 
+// 					}  
+// 				}
+// 				if (c==0) {
+// 						yProc->pVolContrib.push_back(std::make_pair(cellId, pVol*weight)); 
+// 						yProc->uParticleContrib.push_back(std::make_pair(cellId, weight*prt->linearVelocity*pVol)); 
+// 					}
+// 			}
+// 		}
+// 	}
+// }
+
+
+
+
+
+// void Foam::FoamYade::setCellVolFraction(YadeProc* yProc){
+// 	// set the vol fraction and particle velocity to the grid from the pVolContrib and uParticleContrib arrays from each yade proc. 
+// 	if (!yProc->pVolContrib.size() || !yProc->uParticleContrib.size()) {return; }
+// 	for (unsigned i=0; i != yProc->pVolContrib.size(); ++i){
+// 		const label& id = yProc->pVolContrib[i].first; 
+// 		const double& pvolC = 1.0-(yProc->pVolContrib[i].second/mesh.V()[id]); 
+// 		Pout << "pvolC = " << pvolC << endl; 
+// 		alpha[id] = ((pvolC > 0.10) ? pvolC : 0.10);
+// 		uParticle[id] = yProc->uParticleContrib[i].second/(mesh.V()[id]*(1-alpha[id])); 
+// 	}
+// 	
+// }
 
 
 void Foam::FoamYade::calcHydroForce(YadeProc* yProc){
@@ -419,18 +482,22 @@ void Foam::FoamYade::hydroDragForce(YadeParticle*  prt){
 	vector uf(0,0,0); 
 	double alpha_f = 0.0; 
 	double pv = 0.0; 
+	
 	for (const auto& idwt : prt->interpCellWeight){
 		uf += (U[idwt.first]*idwt.second); 
 		alpha_f += (alpha[idwt.first]*idwt.second); 
 		pv += (prt->vol*idwt.second); 
 	}
+
 	double alpha_p = 1-alpha_f; 
 	
 	const vector urelvel = (uf-prt->linearVelocity); 
 	const double magUR = mag(urelvel); 
-	const double Re = small + ((magUR*prt->dia)/nu);
-	const double cd = Re < 1000 ? (24/(Re))*(1+(0.15*std::pow(Re, 0.687))) : 0.44; 
+	const double Re =  ((magUR*prt->dia)/nu);
+	double cd = 0;  
+	if (Re > small) cd = Re < 1000 ? (24/(Re))*(1+(0.15*std::pow(Re, 0.687))) : 0.44; 
 	double coeff; 
+	
 	if (alpha_f > 0.8){
 		coeff = 0.75*cd*alpha_f*alpha_p*(1/prt->dia)*rhoF*magUR*std::pow(alpha_f, -2.65); 
 	} else {
@@ -441,13 +508,15 @@ void Foam::FoamYade::hydroDragForce(YadeParticle*  prt){
 		double cf2 = 1.75*alpha_p*rhoF*(1/(prt->dia*alpha_f))*magUR; 
 		coeff = cf1+cf2; 
 	}
-// 	
-	vector hf = (pv)*coeff*urelvel*(1.0/(alpha_p)); 
+	
+
+	vector hf = pv*coeff*urelvel*(1.0/alpha_p); 
 	prt->hydroForce += hf; 
 	
 	for (const auto& idwt : prt->interpCellWeight){
-		double ooCellVol = 1.0/(rhoF*mesh.V()[idwt.first]); 
-		uSourceDrag[idwt.first] += (-coeff*idwt.second*pv*ooCellVol*(1.0/(alpha_p))); 
+		double ooCellVol = (prt->vol)/(rhoF*mesh.V()[idwt.first]); 
+		uInterp[idwt.first] +=  (uf*idwt.second); 
+		uSourceDrag[idwt.first] += (-coeff*idwt.second*ooCellVol); 
 	}
     
 }
@@ -516,12 +585,27 @@ void Foam::FoamYade::stokesDragTorque(YadeParticle* prt) {
 	prt->hydroTorque = M_PI*(pow(prt->dia, 3))*(wfluid-prt->rotationalVelocity)*nu*rhoF; 
 }
 
-void Foam::FoamYade::updateSources(YadeProc* yProc) {
-  
-	for (unsigned i =0; i != yProc->pVolContrib.size(); ++i) {
-		const label& cellId = yProc->pVolContrib[i].first; 
-		uSourceDrag[cellId] = alpha[cellId]*uSourceDrag[cellId]; 
+void Foam::FoamYade::updateSources() {
+
+	if (!pVolcontrib.size()) {return; } 
+	
+	for (const auto& iv : pVolcontrib) {
+		const int& cellId = iv.first;
+		const double alphaf = alpha[cellId]; const double alphap = 1-alpha[cellId]; 
+		Pout << "Ucell = " << U[cellId] << endl; 
+		Pout << "uInterp = " << uInterp[cellId] << endl; 
+		Pout << "uParticle = " << uParticle[cellId] << endl;  
+		uCoeff[cellId] = mag(U[cellId]) > small ? (U[cellId] & uInterp[cellId])/(mag(U[cellId])) : 0.0;  
+		uSourceDrag[cellId] = uSourceDrag[cellId]/(alphap*alphaf);
+		uCoeff[cellId] = uCoeff[cellId]*uSourceDrag[cellId];  
+		Pout << "ucoeff = "  << uCoeff[cellId] << endl; 
+		Pout << "uDrag = "  << uSourceDrag[cellId] << endl; 
 	}
+/*	
+	for (const auto& cellC : cellCount) {
+		uSourceDrag[cellC.first] = uSourceDrag[cellC.first]/(cellC.second); 
+	}*/
+
 }
 
 
@@ -591,12 +675,18 @@ void Foam::FoamYade::exchangeDT(){
 void Foam::FoamYade::setSourceZero(){
 	forAll(uSource, cellI){
 		uSource[cellI] = vector(0,0,0); 
+		
 		if (isGaussianInterp){
 			alpha[cellI] = 1.0; 
 			uSourceDrag[cellI] = 0.0;
 			uParticle[cellI] = vector(0.0,0.0,0.0); 
+			uInterp[cellI] = vector(0.0,0.0,0.0); 
+			uCoeff[cellI] = 0.0; 
 		}
+		
 	}
+	pVolcontrib.clear(); 
+	cellCount.clear(); 
 	clearInCommProcs();
 }
 
@@ -648,11 +738,16 @@ void Foam::FoamYade::setParticleAction(double dt) {
 		if (inCommProcs.size()){
 			for (const auto& yProc : inCommProcs){
 				buildCellPartList(yProc.get());
-				setCellVolFraction(yProc.get());
-				calcHydroForce(yProc.get());
-// 				updateSources(yProc.get());
-// 				calcHydroTorque(yProc.get());
+				//setCellVolFraction(yProc.get());
+				//calcHydroForce(yProc.get());
+				//updateSources(yProc.get());
+ 				//calcHydroTorque(yProc.get());
 			}
+			setCellVolFraction();
+			for (const auto& yProc : inCommProcs) {
+				calcHydroForce(yProc.get());
+			}
+			updateSources();
 		}
 	} else {
 		if (inCommProcs.size()){

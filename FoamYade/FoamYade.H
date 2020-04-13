@@ -4,6 +4,7 @@
 #define FoamYadeMPI_H 
 
 #include <vector> 
+#include <map> 
 #include <memory> 
 #include <algorithm> 
 #include <functional> 
@@ -71,11 +72,17 @@ namespace Foam {
 			const int TAG_SHARED_ID = 1080; 
 			const int TAG_ID = 1090; 
 			const double small = 1e-09; 
+			
+
 	
 		public: 
-// 			std::map<int, int> cellCount; 
+			std::vector<std::pair<int, int> >  cellCount; 
+			std::map<int, std::pair<double, vector> > pVolcontrib; 
+			std::vector<int> pInCell; 
 			std::vector<int> sendRanks; // used in serial to identify the force sending proc 
 			std::vector<MPI_Request> reqVec; 
+			
+			
 			int localRank, worldRank; 
 			int localCommSize, worldCommSize; 
 			int commSzDff; 
@@ -92,10 +99,14 @@ namespace Foam {
 			scalar rhoF; 
 			bool isGaussianInterp; 
 			volScalarField& uSourceDrag; 
+			volScalarField& uCoeff; 
+			volVectorField& uInterp; 
 			volScalarField& alpha; 
 			volVectorField& uSource; 
 			volVectorField& uParticle; 
 			bool serialYade=false; 
+			
+			void incrementCellCount(const int&); 
 			
 			meshTree mshTree; 
 			double yadeDT; 
@@ -118,13 +129,16 @@ namespace Foam {
 				    const volVectorField& _ddtU, 
 				    const uniformDimensionedVectorField& _g, 
 				    volScalarField& _uSourceDrag, 
+				    volScalarField& _uCoeff,
+				    volVectorField& _uInterp, 
 				    volScalarField& _alpha, 
-				    volVectorField& _uSource, 
+				    volVectorField& _uSource,
+// 				    vol
 				    volVectorField& _uParticle, 
 				    bool gaussianInterp) : 
 				    mesh(_mesh), U(_U), gradP(_gradP), 
 				    vGrad(_vGrad), divT(_divT), ddtU(_ddtU), 
-				    g(_g), uSourceDrag(_uSourceDrag),  alpha(_alpha), 
+				    g(_g), uSourceDrag(_uSourceDrag),  uCoeff(_uCoeff),uInterp(_uInterp),alpha(_alpha), 
 				    uSource(_uSource), uParticle(_uParticle), mshTree(mesh.C())
 				    {isGaussianInterp = gaussianInterp; getRankSize();  }
 			void allocArrays(int, const std::shared_ptr<YadeProc>& ); 
@@ -137,8 +151,9 @@ namespace Foam {
 			std::vector<int> locatePt(const vector& ); 
 			void buildCellPartList(YadeProc* ); 
 			void calcInterpWeightGaussian(std::vector<std::shared_ptr<YadeParticle> >& ); 
-			void setCellVolFraction(YadeProc* ); 
-			void updateSources(YadeProc* ); 
+			//void setCellVolFraction(YadeProc* ); 
+			void setCellVolFraction(); 
+			void updateSources(); 
 			void sendHydroForceYadeMPI(); 
 			void exchangeDT();
 			void sendHydroTimeScale(YadeProc* ); 
@@ -165,6 +180,8 @@ namespace Foam {
 			// terminate run 
 			void finalizeRun(); 
 			int getpIndx(const std::vector<std::shared_ptr<YadeParticle>>& , const int& ); 
+			void insertCellIds(const int& cellId); 
+			void setPvolContrib(const int&, const  double&, const vector& ); 
 			virtual ~FoamYade(){}; 
 	};
 	
