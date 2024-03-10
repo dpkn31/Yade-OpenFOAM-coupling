@@ -64,15 +64,21 @@ namespace Foam {
 			const int TAG_SEARCH_RES = 1004; 
 			const int TAG_FLUID_DT = 1050; 
 			const int TAG_YADE_DT = 1060; 
+			const int TAG_SHARED_ID = 1080; 
+			const int TAG_ID = 1090; 			
 			const double small = 1e-09; 
-	
-		public: 
+			MPI_Comm parentComm;
+			MPI_Comm interComm;
+			
+		public:
+			std::vector<std::pair<int, int> >  cellCount; 
+			std::map<int, std::pair<double, vector> > pVolcontrib; 		
 			std::vector<int> sendRanks; // used in serial to identify the force sending proc 
 			std::vector<MPI_Request> reqVec; 
 			int localRank, worldRank; 
 			int localCommSize, worldCommSize; 
 			int commSzDff; 
-			bool rankSizeSet = false; 
+			bool couplingIsInitialized = false; 
 			const fvMesh& mesh; 
 			const volVectorField& U; 
 			const volVectorField& gradP; 
@@ -83,11 +89,14 @@ namespace Foam {
 			scalar rhoP; 
 			scalar nu; 
 			scalar rhoF; 
-			bool isGaussianInterp; 
+			bool isGaussianInterp;
+			volScalarField& uCoeff; 
+			volVectorField& uInterp; 			 
 			volScalarField& uSourceDrag; 
 			volScalarField& alpha; 
 			volVectorField& uSource; 
-			volVectorField& uParticle; 
+			volVectorField& uParticle;
+			void updateSources();  
 			bool serialYade; 
 			
 			meshTree mshTree; 
@@ -113,15 +122,19 @@ namespace Foam {
 				    volScalarField& _uSourceDrag, 
 				    volScalarField& _alpha, 
 				    volVectorField& _uSource, 
-				    volVectorField& _uParticle, 
+				    volVectorField& _uParticle,
+					volScalarField& _uCoeff,
+					volVectorField& _uInterp, 					 
 				    bool gaussianInterp) : 
 				    mesh(_mesh), U(_U), gradP(_gradP), 
 				    vGrad(_vGrad), divT(_divT), ddtU(_ddtU), 
-				    g(_g), uSourceDrag(_uSourceDrag),  alpha(_alpha), 
+				    g(_g), uSourceDrag(_uSourceDrag), uCoeff(_uCoeff),uInterp(_uInterp),alpha(_alpha), 
 				    uSource(_uSource), uParticle(_uParticle), mshTree(mesh.C())
-				    {isGaussianInterp = gaussianInterp; getRankSize();  }
+				    {isGaussianInterp = gaussianInterp; InitializeCoupling();  }
+
+
 			void allocArrays(int, const std::shared_ptr<YadeProc>& ); 
-			void getRankSize(); 
+			void InitializeCoupling(); 
 			void initFields(); 
 			void setScalarProperties(scalar, scalar, scalar); 
 			void sendMeshBbox(); 
@@ -130,7 +143,7 @@ namespace Foam {
 			std::vector<int> locatePt(const vector& ); 
 			void buildCellPartList(YadeProc* ); 
 			void calcInterpWeightGaussian(std::vector<std::shared_ptr<YadeParticle> >& ); 
-			void setCellVolFraction(YadeProc* ); 
+			void setCellVolFraction(); 
 			void updateSources(YadeProc* ); 
 			void sendHydroForceYadeMPI(); 
 			void exchangeDT();
@@ -157,6 +170,11 @@ namespace Foam {
 			void printMsg(const std::string& ); 
 			// terminate run 
 			void finalizeRun(); 
+			int getpIndx(const std::vector<std::shared_ptr<YadeParticle>>& , const int& ); 
+			void insertCellIds(const int& cellId); 
+			void setPvolContrib(const int&, const  double&, const vector& );
+			void incrementCellCount(const int&); 
+ 			
 			virtual ~FoamYade(){}; 
 	}; 
   

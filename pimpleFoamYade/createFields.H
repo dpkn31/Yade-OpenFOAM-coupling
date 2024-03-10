@@ -198,6 +198,28 @@ volScalarField uSourceDrag(
 );
 
 
+volScalarField uCoeff(
+    IOobject(
+      "uCoeffDrag",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::NO_WRITE),
+    mesh,
+    dimensionedScalar("dragCoeffFluid", dimensionSet(0,0,-1,0,0,0,0), 0 )
+); 
+
+volVectorField uInterp(
+    IOobject(
+      "uInterpField",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::NO_WRITE),
+    mesh,
+    dimensionedVector("interpVel", dimensionSet(0,1,-1,0,0,0,0), vector(0,0,0) )
+);
+
 volVectorField uSource(
     IOobject(
       "uSource",
